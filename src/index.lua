@@ -3158,6 +3158,8 @@ local dark = Color.new(40, 40, 40, 255)
 local blackalpha = Color.new(0, 0, 0, 128)
 local lightgrey = Color.new(58, 58, 58)
 local white = Color.new(255, 255, 255)
+local coverOpaqueTint = Color.new(255, 255, 255, 255)
+local halfAlphaCoverTint = Color.new(255, 255, 255, 128)
 local red = Color.new(190, 0, 0)
 local blue = Color.new(2, 72, 158)
 local yellow = Color.new(225, 184, 0)
@@ -13789,7 +13791,7 @@ local function DrawCover_Flat(x, y, text, color, icon, sel)
 
     Graphics.setImageFilters(icon, FILTER_LINEAR, FILTER_LINEAR)
 
-    local coverTint = sel == p and white or Color.new(255, 255, 255, 128)
+    local coverTint = sel == p and coverOpaqueTint or halfAlphaCoverTint
     Graphics.drawScaleImage(x, fv_cover_y, icon, fv_cover_scale, fv_cover_height / cover_height, coverTint)
 
     -- Add dark overlay to cover left of current
@@ -13823,7 +13825,7 @@ local function DrawCover_Flat_Smooth(x, y, text, color, icon, sel)
     Graphics.setImageFilters(icon, FILTER_LINEAR, FILTER_LINEAR)
 
     -- Use precise positioning for the actual cover image
-    local coverTint = sel == p and white or Color.new(255, 255, 255, 128)
+    local coverTint = sel == p and coverOpaqueTint or halfAlphaCoverTint
     Graphics.drawScaleImage(precise_x, fv_cover_y, icon, fv_cover_scale, fv_cover_height / cover_height, coverTint)
 
     -- Add dark overlay to cover left of current
@@ -14919,13 +14921,13 @@ function drawCategory (def)
                         -- Check if this is the default placeholder image (always scale to predicted width)
                         if icon == imgCoverTmp or not file.precomputed_width then
                             -- Scale to predicted width for uncomputed covers or default placeholder
-                            local coverTint = l == p and white or halfAlphaCoverTint
+                            local coverTint = l == p and coverOpaqueTint or halfAlphaCoverTint
                             Graphics.drawScaleImage(cover_x, fv_cover_y, icon, render_width / Graphics.getImageWidth(icon), fv_cover_height / Graphics.getImageHeight(icon), coverTint)
                         else
                             -- Use actual scale for computed covers
                             local cover_height = Graphics.getImageHeight(icon)
                             local cover_scale = fv_cover_height / cover_height
-                            local coverTint = l == p and white or halfAlphaCoverTint
+                            local coverTint = l == p and coverOpaqueTint or halfAlphaCoverTint
                             Graphics.drawScaleImage(cover_x, fv_cover_y, icon, cover_scale, fv_cover_height / cover_height, coverTint)
                         end
 
