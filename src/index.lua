@@ -15475,8 +15475,8 @@ local settingsWheelTouchDown = false
 local settingsWheelUI = {
     stickDir = 0,
     bands = nil,
-    red = Color.new(236, 62, 82, 235),
-    redDim = Color.new(236, 62, 82, 120),
+    red = Color.new(188, 38, 56, 235),
+    redDim = Color.new(188, 38, 56, 120),
     cyan = Color.new(86, 228, 255, 240),
     cyanDim = Color.new(86, 228, 255, 90),
     green = Color.new(104, 236, 108, 255),
@@ -15519,15 +15519,16 @@ function settingsWheelUI.hexagon(cx, cy, r, color)
     drawHudLine(cx - half, cx - r, cy + rise, cy, color)
 end
 
-function settingsWheelUI.fitText(text, maxWidth)
-    local font = fnt20
-    if Font.getTextWidth(font, text) > maxWidth then
-        if settingsWheelUI.smallFont == nil then
-            settingsWheelUI.smallFont = Font.load("app0:/DATA/" .. fontname)
-            Font.setPixelSizes(settingsWheelUI.smallFont, 16)
-        end
-        font = settingsWheelUI.smallFont
+function settingsWheelUI.labelFont()
+    if settingsWheelUI.smallFont == nil then
+        settingsWheelUI.smallFont = Font.load("app0:/DATA/" .. fontname)
+        Font.setPixelSizes(settingsWheelUI.smallFont, 16)
     end
+    return settingsWheelUI.smallFont
+end
+
+function settingsWheelUI.fitText(text, maxWidth)
+    local font = settingsWheelUI.labelFont()
     while Font.getTextWidth(font, text) > maxWidth and string.len(text) > 4 do
         text = string.sub(text, 1, string.len(text) - 4) .. "..."
     end
@@ -15540,11 +15541,11 @@ function settingsWheelUI.background()
         ui.bands = {}
         for band = 0, 67 do
             local edge = math.abs(band / 67 - 0.5) * 2
-            ui.bands[band] = Color.new(30, 6, 18, math.floor(72 + 100 * edge * edge))
+            ui.bands[band] = Color.new(20, 3, 11, math.floor(120 + 95 * edge * edge))
         end
         ui.side = {}
         for strip = 0, 9 do
-            ui.side[strip] = Color.new(14, 0, 8, math.floor(110 * (1 - strip / 10)))
+            ui.side[strip] = Color.new(10, 0, 5, math.floor(120 * (1 - strip / 10)))
         end
     end
     for band = 0, 67 do
@@ -15558,25 +15559,25 @@ end
 
 function settingsWheelUI.header()
     local ui = settingsWheelUI
-    drawFillRect(18, 942, 36, 38, ui.red)
-    drawFillRect(18, 942, 38, 40, ui.redDim)
+    drawFillRect(18, 942, 44, 46, ui.red)
+    drawFillRect(18, 942, 46, 48, ui.redDim)
 
     local blueLabel = "CYBERFLOW"
     local blueWidth = Font.getTextWidth(fnt22, blueLabel)
-    Font.print(fnt22, 33, 8, blueLabel, ui.cyan)
-    drawFillRect(33, 33 + blueWidth, 31, 33, ui.cyanDim)
-    drawFillRect(33 + blueWidth - 14, 33 + blueWidth, 31, 33, ui.cyan)
+    Font.print(fnt22, 33, 6, blueLabel, ui.cyan)
+    drawFillRect(33, 33 + blueWidth, 36, 38, ui.cyanDim)
+    drawFillRect(33 + blueWidth - 14, 33 + blueWidth, 36, 38, ui.cyan)
 
     local greenLabel = "Mod by badmanwazzy37"
     local greenX = 33 + blueWidth + 34
     local greenWidth = Font.getTextWidth(fnt22, greenLabel)
-    Font.print(fnt22, greenX, 8, greenLabel, ui.green)
-    drawFillRect(greenX, greenX + greenWidth, 31, 33, Color.new(104, 236, 108, 90))
-    drawFillRect(greenX + greenWidth - 14, greenX + greenWidth, 31, 33, ui.green)
+    Font.print(fnt22, greenX, 6, greenLabel, ui.green)
+    drawFillRect(greenX, greenX + greenWidth, 36, 38, Color.new(104, 236, 108, 90))
+    drawFillRect(greenX + greenWidth - 14, greenX + greenWidth, 36, 38, ui.green)
 
     local modLabel = "A Cyberpunk 2077 RetroFlow Mod"
     local modWidth = Font.getTextWidth(fnt22, modLabel)
-    Font.print(fnt22, 942 - modWidth, 8, modLabel, ui.red)
+    Font.print(fnt22, 942 - modWidth, 6, modLabel, ui.red)
 end
 
 function settingsWheelUI.button(entry, selected, label)
@@ -15598,7 +15599,7 @@ function settingsWheelUI.button(entry, selected, label)
         if icon ~= nil then
             Graphics.drawScaleImage(x + 6, y + 6, icon, 0.6, 0.6, selected and ui.textOn or ui.cyan)
         end
-        PrintCentered(fnt20, x + w / 2, y + h + 1, label, selected and ui.textOn or ui.text, 20)
+        PrintCentered(ui.labelFont(), x + w / 2, y + h + 1, label, selected and ui.textOn or ui.text, 16)
     else
         ui.chamfer(x, y, w, h, c1, c2, selected and ui.bodyOn or ui.body)
         ui.outline(x, y, w, h, c1, c2, line)
@@ -15618,8 +15619,7 @@ function settingsWheelUI.button(entry, selected, label)
 
         local textX = cx + r + 9
         local fitted, labelFont = ui.fitText(label, w - (textX - x) - c2)
-        local labelOffset = labelFont == fnt20 and 0 or 2
-        Font.print(labelFont, textX, y + math.floor((h - 22) / 2) + labelOffset, fitted, selected and ui.textOn or ui.text)
+        Font.print(labelFont, textX, y + math.floor((h - 20) / 2) - 2, fitted, selected and ui.textOn or ui.text)
     end
 
     if selected then
@@ -15652,7 +15652,7 @@ function settingsWheelUI.clock()
     drawFillRect(x - 4, x - 1, y + 10, y + 21, ui.redDim)
     drawFillRect(x + w + 1, x + w + 4, y + 10, y + 21, ui.redDim)
     drawFillRect(x + 8, x + 16, y + 3, y + 4, ui.redDim)
-    PrintCentered(fnt20, x + w / 2, y + math.floor((h - 22) / 2), text, ui.timeText, 20)
+    PrintCentered(ui.labelFont(), x + w / 2, y + math.floor((h - 20) / 2) - 2, text, ui.timeText, 16)
 end
 
 -- Moves the highlight to the nearest option in the pressed direction (dx/dy in screen axes)
