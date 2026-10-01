@@ -15753,8 +15753,16 @@ function cyberInfoUI.background()
         end
         ui.cornerLine = Color.new(214, 58, 70, 150)
     end
+    -- Nothing may be drawn over the cover area before the 3D box art, or the box is hidden
+    local coverLeft, coverRight, coverTop, coverBottom = 372, 640, 96, 470
     for band = 0, 67 do
-        drawFillRect(0, 960, band * 8, band * 8 + 8, ui.bands[band])
+        local bandTop = band * 8
+        if bandTop + 8 > coverTop and bandTop < coverBottom then
+            drawFillRect(0, coverLeft, bandTop, bandTop + 8, ui.bands[band])
+            drawFillRect(coverRight, 960, bandTop, bandTop + 8, ui.bands[band])
+        else
+            drawFillRect(0, 960, bandTop, bandTop + 8, ui.bands[band])
+        end
     end
     for strip = 0, 9 do
         drawFillRect(strip * 12, strip * 12 + 12, 0, 544, ui.side[strip])
@@ -17256,7 +17264,8 @@ while true do
             inPreview = true
         end
         
-        -- animate cover zoom in (the box art stays centred on screen)
+        -- animate cover zoom in (the box art sits between the buttons and the data window)
+        prevX = 0.15
         if prevZ < 1 then
             prevZ = prevZ + 0.06
         end
