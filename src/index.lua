@@ -3253,8 +3253,10 @@ local cyberpunkThemes = {
     [8] = { name = "Mikoshi", folder = "MIKOSHI", accent = { 37, 218, 232 }, text = { 246, 78, 190 } },
     [9] = { name = "Militech", folder = "MILITECH", accent = { 47, 113, 198 }, text = { 242, 176, 74 } },
     [10] = { name = "Alt Cunningham", folder = "ALT_CUNNINGHAM", accent = { 212, 58, 211 }, text = { 68, 225, 236 } },
+    [11] = { name = "Just Another Weapon: Phantom Liberty", folder = "JUST_ANOTHER_WEAPON_PHANTOM_LIBERTY", accent = { 235, 153, 39 }, text = { 183, 225, 235 } },
+    [12] = { name = "Nocturne OP55N1", folder = "NOCTURNE_OP55N1", accent = { 196, 45, 57 }, text = { 239, 215, 212 } },
 }
-local cyberpunkThemeCount = 10
+local cyberpunkThemeCount = 12
 local selectedCyberpunkTheme = 0
 local cyberpunkThemeMusicPath = nil
 local cyberpunkVideoPath = nil

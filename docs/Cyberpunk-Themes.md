@@ -17,6 +17,8 @@ RetroFlow includes selectable color-and-media presets inspired by the Cyberpunk 
 | Mikoshi | `#25DAE8` | `#F64EBE` | `ux0:/data/RetroFlow/THEMES/MIKOSHI/` |
 | Militech | `#2F71C6` | `#F2B04A` | `ux0:/data/RetroFlow/THEMES/MILITECH/` |
 | Alt Cunningham | `#D43AD3` | `#44E1EC` | `ux0:/data/RetroFlow/THEMES/ALT_CUNNINGHAM/` |
+| Just Another Weapon: Phantom Liberty | `#EB9927` | `#B7E1EB` | `ux0:/data/RetroFlow/THEMES/JUST_ANOTHER_WEAPON_PHANTOM_LIBERTY/` |
+| Nocturne OP55N1 | `#C42D39` | `#EFD7D4` | `ux0:/data/RetroFlow/THEMES/NOCTURNE_OP55N1/` |
 
 Each themed folder can contain:
 
