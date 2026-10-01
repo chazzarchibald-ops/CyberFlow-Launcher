@@ -3176,11 +3176,23 @@ img_loader_green = Color.new(0, 255, 0)
 img_loader_blackalpha = Color.new(0, 0, 0, 128)
 
 local drawFillRect = Graphics.fillRect
+local drawHudLine = Graphics.drawLine
 Graphics.fillRect = function(x1, x2, y1, y2, color)
     if Color.getA(color) > 128 then
         color = Color.new(Color.getR(color), Color.getG(color), Color.getB(color), 128)
     end
-    return drawFillRect(x1, x2, y1, y2, color)
+    drawFillRect(x1, x2, y1, y2, color)
+
+    local panelWidth = x2 - x1
+    local panelHeight = y2 - y1
+    if panelWidth >= 280 and panelHeight >= 100 and x1 >= 0 and x2 <= 960 then
+        local accent = Color.new(Color.getR(themeCol), Color.getG(themeCol), Color.getB(themeCol), 220)
+        local corner = math.min(16, math.floor(panelHeight / 4))
+        drawHudLine(x1 + 2, x1 + corner, y1 + corner, y1 + 2, accent)
+        drawHudLine(x2 - corner, x2 - 2, y1 + 2, y1 + corner, accent)
+        drawHudLine(x1 + 2, x1 + corner, y2 - corner, y2 - 2, accent)
+        drawHudLine(x2 - corner, x2 - 2, y2 - 2, y2 - corner, accent)
+    end
 end
 
 local targetX = 0
