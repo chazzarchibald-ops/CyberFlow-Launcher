@@ -15458,31 +15458,232 @@ end
 -- Capture function load time before main loop starts (major performance optimization)
 functionTime = Timer.getTime(oneLoopTimer)
 
+-- Option order matters: activate_settings_wheel_option and the menu return paths use these indexes
 local settingsWheelEntries = {
-    { label = "Search", fallback = "Search", icon = "setting_icon_search", x = 480, y = 82 },
-    { label = "Categories", fallback = "Categories", icon = "setting_icon_categories", x = 630, y = 136 },
-    { label = "Theme", fallback = "Appearance", icon = "setting_icon_theme", x = 700, y = 270 },
-    { label = "Audio", fallback = "Audio", icon = "setting_icon_sounds", x = 630, y = 404 },
-    { label = "Artwork", fallback = "Artwork", icon = "setting_icon_artwork", x = 480, y = 458 },
-    { label = "Scan_Settings", fallback = "Scanning", icon = "setting_icon_scanning", x = 330, y = 404 },
-    { label = "Other_Settings", fallback = "Other", icon = "setting_icon_other", x = 260, y = 270 },
-    { label = "Language_colon", fallback = "Language", icon = "setting_icon_language", x = 330, y = 136 },
+    { label = "Search", fallback = "SEARCH", icon = "setting_icon_search", x = 465, y = 410, w = 30, h = 30, node = true },
+    { label = "Categories", fallback = "CATEGORIES", icon = "setting_icon_categories", x = 239, y = 254, w = 157, h = 42 },
+    { fallback = "THEMES", icon = "setting_icon_theme", x = 77, y = 254, w = 157, h = 42 },
+    { label = "Audio", fallback = "AUDIO", icon = "setting_icon_sounds", x = 561, y = 254, w = 157, h = 42 },
+    { label = "Artwork", fallback = "ARTWORK", icon = "setting_icon_artwork", x = 722, y = 254, w = 157, h = 42 },
+    { label = "Scan_Settings", fallback = "SCAN SETTINGS", icon = "setting_icon_scanning", x = 400, y = 254, w = 157, h = 42 },
+    { label = "Other_Settings", fallback = "OTHER SETTINGS", icon = "setting_icon_other", x = 728, y = 425, w = 208, h = 31 },
+    { label = "Language_colon", fallback = "LANGUAGE", icon = "setting_icon_language", x = 131, y = 425, w = 210, h = 31 },
 }
 
 local settingsWheelTouchDown = false
 
-local function settings_wheel_sector(dx, dy)
-    local absX = math.abs(dx)
-    local absY = math.abs(dy)
-    if absX > absY * 2 then
-        return dx > 0 and 2 or 6
-    elseif absY > absX * 2 then
-        return dy > 0 and 0 or 4
-    elseif dx >= 0 then
-        return dy > 0 and 1 or 3
-    else
-        return dy > 0 and 7 or 5
+local settingsWheelUI = {
+    stickDir = 0,
+    bands = nil,
+    red = Color.new(236, 62, 82, 235),
+    redDim = Color.new(236, 62, 82, 120),
+    cyan = Color.new(86, 228, 255, 240),
+    cyanDim = Color.new(86, 228, 255, 90),
+    green = Color.new(104, 236, 108, 255),
+    body = Color.new(6, 22, 46, 205),
+    bodyOn = Color.new(10, 52, 92, 228),
+    text = Color.new(86, 228, 255, 255),
+    textOn = Color.new(222, 252, 255, 255),
+    timeBody = Color.new(160, 30, 44, 215),
+    timeText = Color.new(255, 232, 232, 255),
+}
+
+-- Fills a rectangle with a chamfered top-left and bottom-right corner
+function settingsWheelUI.chamfer(x, y, w, h, c1, c2, fill)
+    for i = 0, c1 - 1 do
+        drawFillRect(x + (c1 - i), x + w, y + i, y + i + 1, fill)
     end
+    drawFillRect(x, x + w, y + c1, y + h - c2, fill)
+    for j = 0, c2 - 1 do
+        drawFillRect(x, x + w - (j + 1), y + h - c2 + j, y + h - c2 + j + 1, fill)
+    end
+end
+
+function settingsWheelUI.outline(x, y, w, h, c1, c2, color)
+    drawHudLine(x + c1, x + w - 1, y, y, color)
+    drawHudLine(x, x + c1, y + c1, y, color)
+    drawHudLine(x, x, y + c1, y + h - 1, color)
+    drawHudLine(x, x + w - c2, y + h - 1, y + h - 1, color)
+    drawHudLine(x + w - 1, x + w - c2, y + h - c2 - 1, y + h - 1, color)
+    drawHudLine(x + w - 1, x + w - 1, y, y + h - c2 - 1, color)
+end
+
+function settingsWheelUI.hexagon(cx, cy, r, color)
+    local half = math.floor(r / 2)
+    local rise = math.floor(r * 0.87)
+    drawHudLine(cx - r, cx - half, cy, cy - rise, color)
+    drawHudLine(cx - half, cx + half, cy - rise, cy - rise, color)
+    drawHudLine(cx + half, cx + r, cy - rise, cy, color)
+    drawHudLine(cx + r, cx + half, cy, cy + rise, color)
+    drawHudLine(cx + half, cx - half, cy + rise, cy + rise, color)
+    drawHudLine(cx - half, cx - r, cy + rise, cy, color)
+end
+
+function settingsWheelUI.fitText(text, maxWidth)
+    local font = fnt20
+    if Font.getTextWidth(font, text) > maxWidth then
+        if settingsWheelUI.smallFont == nil then
+            settingsWheelUI.smallFont = Font.load("app0:/DATA/" .. fontname)
+            Font.setPixelSizes(settingsWheelUI.smallFont, 16)
+        end
+        font = settingsWheelUI.smallFont
+    end
+    while Font.getTextWidth(font, text) > maxWidth and string.len(text) > 4 do
+        text = string.sub(text, 1, string.len(text) - 4) .. "..."
+    end
+    return text, font
+end
+
+function settingsWheelUI.background()
+    local ui = settingsWheelUI
+    if ui.bands == nil then
+        ui.bands = {}
+        for band = 0, 67 do
+            local edge = math.abs(band / 67 - 0.5) * 2
+            ui.bands[band] = Color.new(30, 6, 18, math.floor(72 + 100 * edge * edge))
+        end
+        ui.side = {}
+        for strip = 0, 9 do
+            ui.side[strip] = Color.new(14, 0, 8, math.floor(110 * (1 - strip / 10)))
+        end
+    end
+    for band = 0, 67 do
+        drawFillRect(0, 960, band * 8, band * 8 + 8, ui.bands[band])
+    end
+    for strip = 0, 9 do
+        drawFillRect(strip * 12, strip * 12 + 12, 0, 544, ui.side[strip])
+        drawFillRect(960 - strip * 12 - 12, 960 - strip * 12, 0, 544, ui.side[strip])
+    end
+end
+
+function settingsWheelUI.header()
+    local ui = settingsWheelUI
+    drawFillRect(18, 942, 36, 38, ui.red)
+    drawFillRect(18, 942, 38, 40, ui.redDim)
+
+    local blueLabel = "CYBERFLOW"
+    local blueWidth = Font.getTextWidth(fnt22, blueLabel)
+    Font.print(fnt22, 33, 8, blueLabel, ui.cyan)
+    drawFillRect(33, 33 + blueWidth, 31, 33, ui.cyanDim)
+    drawFillRect(33 + blueWidth - 14, 33 + blueWidth, 31, 33, ui.cyan)
+
+    local greenLabel = "Mod by badmanwazzy37"
+    local greenX = 33 + blueWidth + 34
+    local greenWidth = Font.getTextWidth(fnt22, greenLabel)
+    Font.print(fnt22, greenX, 8, greenLabel, ui.green)
+    drawFillRect(greenX, greenX + greenWidth, 31, 33, Color.new(104, 236, 108, 90))
+    drawFillRect(greenX + greenWidth - 14, greenX + greenWidth, 31, 33, ui.green)
+
+    local modLabel = "A Cyberpunk 2077 RetroFlow Mod"
+    local modWidth = Font.getTextWidth(fnt22, modLabel)
+    Font.print(fnt22, 942 - modWidth, 8, modLabel, ui.red)
+end
+
+function settingsWheelUI.button(entry, selected, label)
+    local ui = settingsWheelUI
+    local x, y, w, h = entry.x, entry.y, entry.w, entry.h
+    local line = selected and ui.cyan or ui.red
+    local c1, c2 = 7, 9
+    if h < 36 then
+        c1, c2 = 5, 7
+    end
+
+    if entry.node then
+        drawFillRect(x, x + w, y, y + h, selected and ui.bodyOn or ui.body)
+        drawHudLine(x, x + w - 1, y, y, line)
+        drawHudLine(x, x + w - 1, y + h - 1, y + h - 1, line)
+        drawHudLine(x, x, y, y + h - 1, line)
+        drawHudLine(x + w - 1, x + w - 1, y, y + h - 1, line)
+        local icon = _G[entry.icon]
+        if icon ~= nil then
+            Graphics.drawScaleImage(x + 6, y + 6, icon, 0.6, 0.6, selected and ui.textOn or ui.cyan)
+        end
+        PrintCentered(fnt20, x + w / 2, y + h + 1, label, selected and ui.textOn or ui.text, 20)
+    else
+        ui.chamfer(x, y, w, h, c1, c2, selected and ui.bodyOn or ui.body)
+        ui.outline(x, y, w, h, c1, c2, line)
+        drawFillRect(x, x + 3, y + c1, y + h, line)
+        drawFillRect(x - 3, x, y + math.floor(h / 2) - 6, y + math.floor(h / 2) + 6, ui.redDim)
+        drawFillRect(x + w - 16, x + w - 7, y + 4, y + 5, ui.redDim)
+
+        local r = math.floor(h * 0.31)
+        local cx = x + 9 + r
+        local cy = y + math.floor(h / 2)
+        ui.hexagon(cx, cy, r, selected and ui.textOn or ui.cyan)
+        local icon = _G[entry.icon]
+        if icon ~= nil then
+            local iconScale = (r * 1.3) / 30
+            Graphics.drawScaleImage(cx - r * 0.65, cy - r * 0.65, icon, iconScale, iconScale, selected and ui.textOn or ui.cyan)
+        end
+
+        local textX = cx + r + 9
+        local fitted, labelFont = ui.fitText(label, w - (textX - x) - c2)
+        local labelOffset = labelFont == fnt20 and 0 or 2
+        Font.print(labelFont, textX, y + math.floor((h - 22) / 2) + labelOffset, fitted, selected and ui.textOn or ui.text)
+    end
+
+    if selected then
+        local ox, oy = x - 4, y - 4
+        drawFillRect(ox, ox + 12, oy, oy + 1, ui.cyan)
+        drawFillRect(ox, ox + 1, oy, oy + 12, ui.cyan)
+        drawFillRect(x + w + 3, x + w + 4, y + h - 8, y + h + 4, ui.cyan)
+        drawFillRect(x + w - 8, x + w + 4, y + h + 3, y + h + 4, ui.cyan)
+    end
+end
+
+function settingsWheelUI.clock()
+    local ui = settingsWheelUI
+    local hour, minute = System.getTime()
+    local text
+    if setTime == 0 then
+        text = string.format("%02d:%02d", hour, minute)
+    else
+        local suffix = hour < 12 and " AM" or " PM"
+        local shown = hour % 12
+        if shown == 0 then
+            shown = 12
+        end
+        text = string.format("%d:%02d%s", shown, minute, suffix)
+    end
+
+    local x, y, w, h = 28, 425, 96, 31
+    ui.chamfer(x, y, w, h, 5, 7, ui.timeBody)
+    ui.outline(x, y, w, h, 5, 7, ui.red)
+    drawFillRect(x - 4, x - 1, y + 10, y + 21, ui.redDim)
+    drawFillRect(x + w + 1, x + w + 4, y + 10, y + 21, ui.redDim)
+    drawFillRect(x + 8, x + 16, y + 3, y + 4, ui.redDim)
+    PrintCentered(fnt20, x + w / 2, y + math.floor((h - 22) / 2), text, ui.timeText, 20)
+end
+
+-- Moves the highlight to the nearest option in the pressed direction (dx/dy in screen axes)
+function settingsWheelUI.move(current, dx, dy)
+    local from = settingsWheelEntries[current + 1]
+    local fromX = from.x + from.w / 2
+    local fromY = from.y + from.h / 2
+    local best = current
+    local bestScore = nil
+    for index, entry in ipairs(settingsWheelEntries) do
+        if index - 1 ~= current then
+            local offsetX = entry.x + entry.w / 2 - fromX
+            local offsetY = entry.y + entry.h / 2 - fromY
+            local along, across
+            if dx ~= 0 then
+                along = offsetX * dx
+                across = math.abs(offsetY)
+            else
+                along = offsetY * dy
+                across = math.abs(offsetX)
+            end
+            if along > 4 and across <= along * 1.5 then
+                local score = along + across * 4
+                if bestScore == nil or score < bestScore then
+                    bestScore = score
+                    best = index - 1
+                end
+            end
+        end
+    end
+    return best
 end
 
 local function activate_settings_wheel_option(option)
@@ -17495,37 +17696,25 @@ while true do
         end
 
         menuItems = 7
-        Font.print(fnt25, setting_x, setting_yh, lang_lines.Settings, white)
-        PrintCentered(fnt20, 480, 247, "CYBERFLOW", white, 20)
-        PrintCentered(fnt20, 480, 278, settingsWheelEntries[menuY + 1].fallback, white, 20)
+        settingsWheelUI.background()
+        settingsWheelUI.header()
 
         for index, entry in ipairs(settingsWheelEntries) do
-            local option = index - 1
-            local selected = option == menuY
-            local x = entry.x
-            local y = entry.y
-            local tileColor = selected and themeCol or Color.new(3, 12, 18, 160)
-            local lineColor = selected and Color.new(Color.getR(themeCol), Color.getG(themeCol), Color.getB(themeCol), 225) or Color.new(72, 132, 145, 115)
-            local icon = _G[entry.icon]
-            local label = lang_lines[entry.label] or entry.fallback
-
-            drawHudLine(480, x, 270, y, Color.new(42, 95, 108, 92))
-            Graphics.fillRect(x - 68, x + 68, y - 28, y + 30, tileColor)
-            drawHudLine(x - 68, x - 48, y - 28, y - 28, lineColor)
-            drawHudLine(x - 68, x - 68, y - 28, y - 10, lineColor)
-            drawHudLine(x + 48, x + 68, y + 30, y + 30, lineColor)
-            drawHudLine(x + 68, x + 68, y + 10, y + 30, lineColor)
-
-            if icon ~= nil then
-                Graphics.drawImage(x - 14, y - 21, icon)
-            end
-            local labelWidth = Font.getTextWidth(fnt20, label)
-            Font.print(fnt20, x - labelWidth / 2, y + 5, label, white)
-
-            if selected then
-                Graphics.fillRect(x - 18, x + 18, y + 26, y + 28, Color.new(Color.getR(themeCol), Color.getG(themeCol), Color.getB(themeCol), 255))
-            end
+            local label = entry.label and lang_lines[entry.label] or entry.fallback
+            label = string.upper((tostring(label):gsub("%s*:%s*$", "")))
+            settingsWheelUI.button(entry, index - 1 == menuY, label)
         end
+        settingsWheelUI.clock()
+
+        local footerClose = Font.getTextWidth(fnt20, lang_lines.Close)
+        local footerSelect = Font.getTextWidth(fnt20, lang_lines.Select)
+        local footerHelp = Font.getTextWidth(fnt20, lang_lines.Help_and_Guides)
+        Graphics.drawImage(900 - footerClose, 510, btnO)
+        Font.print(fnt20, 900 + 28 - footerClose, 508, lang_lines.Close, settingsWheelUI.text)
+        Graphics.drawImage(900 - (btnMargin * 2) - footerClose - footerSelect, 510, btnX)
+        Font.print(fnt20, 900 + 28 - (btnMargin * 2) - footerClose - footerSelect, 508, lang_lines.Select, settingsWheelUI.text)
+        Graphics.drawImage(900 - (btnMargin * 4) - footerClose - footerSelect - footerHelp, 510, btnT)
+        Font.print(fnt20, 900 + 28 - (btnMargin * 4) - footerClose - footerSelect - footerHelp, 508, lang_lines.Help_and_Guides, settingsWheelUI.text)
 
         -- MENU 2 - FUNCTIONS
         status = System.getMessageState()
@@ -17535,7 +17724,7 @@ while true do
                 if settingsWheelTouchDown == false then
                     settingsWheelTouchDown = true
                     for index, entry in ipairs(settingsWheelEntries) do
-                        if math.abs(x1 - entry.x) <= 68 and math.abs(y1 - entry.y) <= 30 then
+                        if x1 >= entry.x - 4 and x1 <= entry.x + entry.w + 4 and y1 >= entry.y - 4 and y1 <= entry.y + entry.h + 4 then
                             touchedOption = index - 1
                             break
                         end
@@ -17545,6 +17734,21 @@ while true do
                 settingsWheelTouchDown = false
             end
 
+            local stickDx = 0
+            local stickDy = 0
+            local analogX = mx - 128
+            local analogY = my - 128
+            if math.abs(analogX) > 60 or math.abs(analogY) > 60 then
+                if math.abs(analogX) > math.abs(analogY) then
+                    stickDx = analogX > 0 and 1 or -1
+                else
+                    stickDy = analogY > 0 and 1 or -1
+                end
+            end
+            local stickDir = stickDx * 1 + stickDy * 2
+            local stickPulse = stickDir ~= 0 and stickDir ~= settingsWheelUI.stickDir
+            settingsWheelUI.stickDir = stickDir
+
             if touchedOption ~= nil then
                 menuY = touchedOption
                 activate_settings_wheel_option(touchedOption)
@@ -17553,23 +17757,16 @@ while true do
             elseif Controls.check(pad, SCE_CTRL_TRIANGLE) and not Controls.check(oldpad, SCE_CTRL_TRIANGLE) then
                 showMenu = 7
                 menuY = 0
-            else
-                local dx = 0
-                local dy = 0
-                if Controls.check(pad, SCE_CTRL_LEFT) then dx = dx - 1 end
-                if Controls.check(pad, SCE_CTRL_RIGHT) then dx = dx + 1 end
-                if Controls.check(pad, SCE_CTRL_UP) then dy = dy + 1 end
-                if Controls.check(pad, SCE_CTRL_DOWN) then dy = dy - 1 end
-
-                if dx ~= 0 or dy ~= 0 then
-                    menuY = settings_wheel_sector(dx, dy)
-                else
-                    local analogX = mx - 128
-                    local analogY = 128 - my
-                    if math.abs(analogX) > 36 or math.abs(analogY) > 36 then
-                        menuY = settings_wheel_sector(analogX, analogY)
-                    end
-                end
+            elseif Controls.check(pad, SCE_CTRL_LEFT) and not Controls.check(oldpad, SCE_CTRL_LEFT) then
+                menuY = settingsWheelUI.move(menuY, -1, 0)
+            elseif Controls.check(pad, SCE_CTRL_RIGHT) and not Controls.check(oldpad, SCE_CTRL_RIGHT) then
+                menuY = settingsWheelUI.move(menuY, 1, 0)
+            elseif Controls.check(pad, SCE_CTRL_UP) and not Controls.check(oldpad, SCE_CTRL_UP) then
+                menuY = settingsWheelUI.move(menuY, 0, -1)
+            elseif Controls.check(pad, SCE_CTRL_DOWN) and not Controls.check(oldpad, SCE_CTRL_DOWN) then
+                menuY = settingsWheelUI.move(menuY, 0, 1)
+            elseif stickPulse then
+                menuY = settingsWheelUI.move(menuY, stickDx, stickDy)
             end
         end
 
@@ -23296,7 +23493,7 @@ while true do
             if state ~= RUNNING then
                 if showMenu == 0 then
                     showMenu = 2
-                    menuY = 0
+                    menuY = 2 -- Start on Themes
                 end
             else
             end
