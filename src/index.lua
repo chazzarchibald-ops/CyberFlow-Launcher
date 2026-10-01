@@ -16008,7 +16008,6 @@ local cyberMenuUI = {
     logo = nil,
     logoFailed = false,
     strips = nil,
-    SKEW = 0.06, -- keep in step with tools that pre-shear the logo image
     panelLeft = 44,
     panelRight = 424,
     rowTop = 156,
@@ -16023,7 +16022,7 @@ local cyberMenuUI = {
 }
 
 function cyberMenuUI.shift(y)
-    return math.floor((y - 300) * cyberMenuUI.SKEW)
+    return 0
 end
 
 function cyberMenuUI.rowY(row)
@@ -16032,6 +16031,8 @@ end
 
 function cyberMenuUI.panel(title)
     local ui = cyberMenuUI
+    settingsWheelUI.background()
+
     if ui.strips == nil then
         ui.strips = {}
         for strip = 0, 67 do
@@ -16045,16 +16046,14 @@ function cyberMenuUI.panel(title)
 
     for strip = 0, 67 do
         local y = strip * 8
-        local s = ui.shift(y + 4)
-        local x1 = ui.panelLeft + s
-        local x2 = ui.panelRight + s
+        local x1 = ui.panelLeft
+        local x2 = ui.panelRight
         drawFillRect(x1, x2, y, y + 8, ui.strips[strip])
         drawFillRect(x1, x1 + 2, y, y + 8, ui.edge)
         drawFillRect(x2 - 1, x2, y, y + 8, ui.edgeDim)
     end
     for y = 6, 540, 12 do
-        local s = ui.shift(y)
-        drawHudLine(ui.panelLeft + s + 3, ui.panelRight + s - 2, y, y, ui.scan)
+        drawHudLine(ui.panelLeft + 3, ui.panelRight - 2, y, y, ui.scan)
     end
 
     if ui.logo == nil and ui.logoFailed == false then
@@ -16066,20 +16065,18 @@ function cyberMenuUI.panel(title)
         end
     end
     if ui.logo ~= nil then
-        Graphics.drawImage(ui.panelLeft + ui.shift(57) - 6, 10, ui.logo)
+        Graphics.drawImage(ui.panelLeft + 12, 8, ui.logo)
     end
 
     local titleFont = cyberInfoUI.font(16)
-    local titleShift = ui.shift(118)
-    Font.print(titleFont, ui.panelLeft + titleShift + 18, 116, cyberInfoUI.cleanLabel(title, ""), ui.cyan)
-    drawHudLine(ui.panelLeft + titleShift + 14, ui.panelRight + titleShift - 14, 138, 138, ui.cyanDim)
+    Font.print(titleFont, ui.panelLeft + 18, 116, cyberInfoUI.cleanLabel(title, ""), ui.cyan)
+    drawHudLine(ui.panelLeft + 14, ui.panelRight - 14, 138, 138, ui.cyanDim)
 end
 
 function cyberMenuUI.selection()
     local ui = cyberMenuUI
     local y = ui.rowY(menuY) - 7
-    local s = ui.shift(y + 16)
-    local x = ui.panelLeft + s + 10
+    local x = ui.panelLeft + 10
     local w = ui.panelRight - ui.panelLeft - 20
     local h = 33
 
@@ -16113,7 +16110,7 @@ function cyberMenuUI.print(font, x, y, text, color)
             color = ui.itemText
         end
     end
-    return ui.saved.print(font, x + ui.shift(y), y, text, color)
+    return ui.saved.print(font, x, y, text, color)
 end
 
 function cyberMenuUI.begin(title)
