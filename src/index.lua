@@ -3764,6 +3764,20 @@ function get_category_label(def_category)
     return lang_lines.PS_Vita
 end
 
+local function cyberdeck_category_name()
+    if showCat == 49 then
+        if random_game_selected == true then
+            return lang_lines.Random_Game or "Random Game"
+        end
+        return lang_lines.Search_Results or "Search Results"
+    elseif showCat >= 50 then
+        local collectionIndex = showCat - 49
+        local collection = collection_files and collection_files[collectionIndex]
+        return collection and (collection.display_name or collection.name) or "Collection"
+    end
+    return get_category_label(showCat)
+end
+
 function build_visible_category_options()
     visible_category_options = {}
     for _, category in pairs(CategoryVisibilityDefinitions) do
@@ -16229,6 +16243,35 @@ while true do
 -- MENU 0 - GAMES SCREEN
     if showMenu == 0 then
         -- MAIN VIEW
+
+        local ramSegments = 41
+        local ramMaximumCategory = math.max(1, count_of_categories - 1)
+        local ramFill = math.ceil(math.min(showCat, ramMaximumCategory) * ramSegments / ramMaximumCategory)
+        if showCat <= 0 then
+            ramFill = 0
+        elseif showCat >= 50 then
+            ramFill = ramSegments
+        end
+
+        local ramLabel = "CYBERDECK RAM: " .. tostring(cyberdeck_category_name())
+        local ramLabelMaxWidth = 440
+        while Font.getTextWidth(fnt22, ramLabel) > ramLabelMaxWidth and string.len(ramLabel) > 18 do
+            ramLabel = string.sub(ramLabel, 1, string.len(ramLabel) - 4) .. "..."
+        end
+        Font.print(fnt22, 275, 15, ramLabel, Color.new(86, 228, 255, 230))
+
+        local ramStartX = 275
+        local ramTop = 42
+        local ramWidth = 8
+        local ramGap = 2
+        local ramActive = Color.new(78, 220, 255, 235)
+        local ramInactive = Color.new(236, 62, 82, 88)
+        for segment = 1, ramSegments do
+            local segmentX = ramStartX + (segment - 1) * (ramWidth + ramGap)
+            local segmentColor = segment <= ramFill and ramActive or ramInactive
+            Graphics.fillRect(segmentX, segmentX + ramWidth, ramTop, ramTop + 18, segmentColor)
+            Graphics.fillRect(segmentX + 1, segmentX + ramWidth - 1, ramTop + 18, ramTop + 22, segmentColor)
+        end
 
         -- game lst view
         if showView == 6 then
