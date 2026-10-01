@@ -3241,6 +3241,24 @@ local setReflections = 1
 local setSounds = 1
 local setMusic = 1
 local themeColor = 9 -- 0 blue, 1 red, 2 yellow, 3 green, 4 grey, 5 black, 6 purple, 7 darkpurple, 8 orange, 9 dark grey
+local cyberpunkThemes = {
+    [0] = { name = "Classic" },
+    [1] = { name = "Arasaka", folder = "ARASAKA", accent = { 220, 28, 46 }, text = { 255, 220, 218 } },
+    [2] = { name = "Afterlife", folder = "AFTERLIFE", accent = { 169, 48, 236 }, text = { 89, 240, 255 } },
+    [3] = { name = "Night City", folder = "NIGHT_CITY", accent = { 0, 190, 220 }, text = { 255, 207, 82 } },
+    [4] = { name = "Arasaka Tower", folder = "ARASAKA_TOWER", accent = { 197, 24, 44 }, text = { 255, 232, 224 } },
+    [5] = { name = "Ending", folder = "ENDING", accent = { 241, 174, 48 }, text = { 42, 224, 232 } },
+    [6] = { name = "Johnny Silverhand", folder = "JOHNNY_SILVERHAND", accent = { 230, 47, 54 }, text = { 194, 210, 220 } },
+    [7] = { name = "Main Theme", folder = "MAIN_THEME", accent = { 247, 218, 56 }, text = { 45, 221, 244 } },
+    [8] = { name = "Mikoshi", folder = "MIKOSHI", accent = { 37, 218, 232 }, text = { 246, 78, 190 } },
+    [9] = { name = "Militech", folder = "MILITECH", accent = { 47, 113, 198 }, text = { 242, 176, 74 } },
+    [10] = { name = "Alt Cunningham", folder = "ALT_CUNNINGHAM", accent = { 212, 58, 211 }, text = { 68, 225, 236 } },
+}
+local cyberpunkThemeCount = 10
+local selectedCyberpunkTheme = 0
+local cyberpunkThemeMusicPath = nil
+local cyberpunkVideoPath = nil
+local cyberpunkVideoEnabled = false
 local menuItems = 3
 local setBackground = 1
 local setLanguage = 0
@@ -3334,6 +3352,7 @@ function SaveSettings()
         "\nExtract_PSP_backgrounds=" .. setPSPExtractBG .. " " .. 
         "\nShow_cores=" .. setShowCores .. " " .. 
         "\nScan_cartridges" .. setScanCartridges .. " " .. 
+        "\nCyberpunk_Theme=" .. selectedCyberpunkTheme .. " " ..
         "\nStartup_Collection=" .. startCategory_collection -- MUST ALWAYS BE LAST -- the config is split into a table using number values which this setting does not have. Need to add proper ini file reading
 
         file_config:write(settings)
@@ -3402,6 +3421,7 @@ if System.doesFileExist(cur_dir .. "/config.dat") then
     local getPSPExtractBG = settingValue[28]; if getPSPExtractBG ~= nil then setPSPExtractBG = getPSPExtractBG end
     local getShowCores = settingValue[29]; if getShowCores ~= nil then setShowCores = getShowCores end
     local getScanCartridges = settingValue[30]; if getScanCartridges ~= nil then setScanCartridges = getScanCartridges end
+    local getCyberpunkTheme = settingValue[31]; if getCyberpunkTheme ~= nil then selectedCyberpunkTheme = getCyberpunkTheme end
     -- settingValue[26] is startup collection 
 
     selectedwall = setBackground
@@ -3994,6 +4014,19 @@ if #collection_files > 0 then
 else
 end
 
+if cyberpunkThemes[selectedCyberpunkTheme] == nil then
+    selectedCyberpunkTheme = 0
+end
+
+local activeCyberpunkTheme = cyberpunkThemes[selectedCyberpunkTheme]
+if activeCyberpunkTheme.folder ~= nil then
+    local themeMediaDir = cur_dir .. "THEMES/" .. activeCyberpunkTheme.folder .. "/"
+    cyberpunkThemeMusicPath = themeMediaDir .. "music.ogg"
+    cyberpunkVideoPath = themeMediaDir .. "background.mp4"
+    System.createDirectory(cur_dir .. "THEMES/")
+    System.createDirectory(themeMediaDir)
+end
+
 if collection_files_start_match > 0 and is_collection_visible(collection_files_start_match) == true then
     showCat = 49 + collection_files_start_match
     startCategory = syscount + collection_files_start_match
@@ -4019,6 +4052,12 @@ end
 
 -- Music -  
 function PlayMusic()
+
+    if cyberpunkThemeMusicPath ~= nil and System.doesFileExist(cyberpunkThemeMusicPath) then
+        sndMusic = Sound.open(cyberpunkThemeMusicPath)
+        Sound.play(sndMusic, true)
+        return
+    end
 
     -- How many tracks?
 
@@ -4122,6 +4161,15 @@ function SetThemeColor()
 end
 SetThemeColor()
 
+function ApplyCyberpunkThemeColors()
+    local selectedTheme = cyberpunkThemes[selectedCyberpunkTheme]
+    if selectedTheme ~= nil and selectedTheme.accent ~= nil then
+        themeCol = Color.new(selectedTheme.accent[1], selectedTheme.accent[2], selectedTheme.accent[3])
+        white = Color.new(selectedTheme.text[1], selectedTheme.text[2], selectedTheme.text[3])
+    end
+end
+ApplyCyberpunkThemeColors()
+
 
 -- Speed related settings (MOVED TO TOP OF FILE)
 
@@ -4160,6 +4208,7 @@ local lang_default =
 ["Reflection_Effect_colon"] = "Reflection Effect: ",
 ["Smooth_Scrolling_colon"] = "Smooth Scrolling: ",
 ["Theme_Color_colon"] = "Theme Color: ",
+["Cyberpunk_Theme_colon"] = "Cyberpunk Theme: ",
 ["Red"] = "Red",
 ["Yellow"] = "Yellow",
 ["Green"] = "Green",
@@ -4574,6 +4623,19 @@ else
             -- Graphics.setImageFilters(imgCustomBack, FILTER_LINEAR, FILTER_LINEAR)
             Render.useTexture(modBackground, imgCustomBack)
         end
+    end
+end
+
+if cyberpunkVideoPath ~= nil and System.doesFileExist(cyberpunkVideoPath) and Video ~= nil then
+    local video_ok = pcall(function()
+        Video.init()
+        Video.open(cyberpunkVideoPath, true)
+        Video.setVolume(0)
+    end)
+    if video_ok then
+        cyberpunkVideoEnabled = true
+    else
+        pcall(Video.term)
     end
 end
 
@@ -5170,8 +5232,14 @@ end
     end
 
 function FreeMemory()
+    if cyberpunkVideoEnabled then
+        Video.term()
+        cyberpunkVideoEnabled = false
+    end
     if setMusic == 1 then
-        if #music_sequential > 1 then
+        if cyberpunkThemeMusicPath ~= nil and System.doesFileExist(cyberpunkThemeMusicPath) then
+            Sound.close(sndMusic)
+        elseif #music_sequential > 1 then
             Sound.close(sndMusic)
         elseif #music_sequential == 1 then
             Sound.close(sndMusic)
@@ -16051,6 +16119,13 @@ while true do
 
 
     -- Graphics
+    if cyberpunkVideoEnabled then
+        local videoFrame = Video.getOutput()
+        if videoFrame ~= nil and videoFrame ~= 0 then
+            Render.useTexture(modBackground, videoFrame)
+            Render.useTexture(modDefaultBackground, videoFrame)
+        end
+    end
     if setBackground >= 1 then
         Render.drawModel(modBackground, 0, 0, -5, 0, 0, 0)-- Draw Background as model
     else
@@ -17544,7 +17619,7 @@ while true do
         Graphics.fillRect(60, 900, 82 + (menuY * 47), 129 + (menuY * 47), themeCol)-- selection
 
 
-        menuItems = 6
+        menuItems = 7
 
         -- MENU 4 / #0 Back
         Font.print(fnt22, setting_x, setting_y0, lang_lines.Back_Chevron, white)--Back
@@ -17620,6 +17695,10 @@ while true do
             Font.print(fnt22, setting_x_offset, setting_y6, lang_lines.Off, white)--OFF
         end
 
+        -- MENU 4 / #7 Cyberpunk Theme
+        Font.print(fnt22, setting_x, setting_y7, lang_lines.Cyberpunk_Theme_colon or "Cyberpunk Theme: ", white)
+        Font.print(fnt22, setting_x_offset, setting_y7, cyberpunkThemes[selectedCyberpunkTheme].name, white)
+
 
         -- MENU 4 - FUNCTIONS
         status = System.getMessageState()
@@ -17693,6 +17772,13 @@ while true do
                     else
                         setChangeViews = 1
                     end
+                elseif menuY == 7 then -- #7 Cyberpunk theme
+                    if selectedCyberpunkTheme < cyberpunkThemeCount then
+                        selectedCyberpunkTheme = selectedCyberpunkTheme + 1
+                    else
+                        selectedCyberpunkTheme = 0
+                    end
+                    restart_after_frame = true
                 end
 
                 --Save settings

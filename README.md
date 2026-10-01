@@ -183,6 +183,7 @@ Navigate your library using the **DPad** or the **Left Stick** or with the **Tou
 #### Image format:
 * Cover and background images must be in **png** format. 
 
+For Cyberpunk-inspired theme presets, media folder paths, and video requirements, see [Cyberpunk Theme Presets](docs/Cyberpunk-Themes.md).
 
 ## Adding Custom wallpaper & music
 
