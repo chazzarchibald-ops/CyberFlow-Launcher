@@ -15442,6 +15442,69 @@ end
 -- Capture function load time before main loop starts (major performance optimization)
 functionTime = Timer.getTime(oneLoopTimer)
 
+local settingsWheelEntries = {
+    { label = "Search", fallback = "Search", icon = "setting_icon_search", x = 480, y = 82 },
+    { label = "Categories", fallback = "Categories", icon = "setting_icon_categories", x = 630, y = 136 },
+    { label = "Theme", fallback = "Appearance", icon = "setting_icon_theme", x = 700, y = 270 },
+    { label = "Audio", fallback = "Audio", icon = "setting_icon_sounds", x = 630, y = 404 },
+    { label = "Artwork", fallback = "Artwork", icon = "setting_icon_artwork", x = 480, y = 458 },
+    { label = "Scan_Settings", fallback = "Scanning", icon = "setting_icon_scanning", x = 330, y = 404 },
+    { label = "Other_Settings", fallback = "Other", icon = "setting_icon_other", x = 260, y = 270 },
+    { label = "Language_colon", fallback = "Language", icon = "setting_icon_language", x = 330, y = 136 },
+}
+
+local settingsWheelTouchDown = false
+
+local function settings_wheel_sector(dx, dy)
+    local absX = math.abs(dx)
+    local absY = math.abs(dy)
+    if absX > absY * 2 then
+        return dx > 0 and 2 or 6
+    elseif absY > absX * 2 then
+        return dy > 0 and 0 or 4
+    elseif dx >= 0 then
+        return dy > 0 and 1 or 3
+    else
+        return dy > 0 and 7 or 5
+    end
+end
+
+local function activate_settings_wheel_option(option)
+    if option == 0 then
+        if hasTyped == false then
+            Keyboard.start(tostring(lang_lines.Search), "", 512, TYPE_LATIN, MODE_TEXT)
+            hasTyped = true
+            keyboard_search = true
+        end
+    elseif option == 1 then
+        showMenu = 3
+        menuY = 0
+    elseif option == 2 then
+        showMenu = 4
+        menuY = 0
+    elseif option == 3 then
+        showMenu = 12
+        menuY = 0
+    elseif option == 4 then
+        showMenu = 5
+        menuY = 0
+    elseif option == 5 then
+        showMenu = 6
+        menuY = 0
+    elseif option == 6 then
+        showMenu = 19
+        menuY = 0
+    elseif option == 7 then
+        if chooseLanguage < 21 then
+            chooseLanguage = chooseLanguage + 1
+        else
+            chooseLanguage = 0
+        end
+        ChangeLanguage(xsetLanguageLookup(chooseLanguage))
+    end
+    SaveSettings()
+end
+
 -- Main loop
 while true do
 
@@ -17242,6 +17305,7 @@ while true do
         -- Load setting icons when entering settings menu (lazy loading optimization)
         load_setting_icons_if_needed()
         
+        if false then
         -- SETTINGS
         -- Footer buttons and icons
         -- Get text widths for positioning
@@ -17383,74 +17447,84 @@ while true do
         end
 
         
+        end
+
+        menuItems = 7
+        Font.print(fnt25, setting_x, setting_yh, lang_lines.Settings, white)
+        PrintCentered(fnt20, 480, 247, "CYBERFLOW", white, 20)
+        PrintCentered(fnt20, 480, 278, settingsWheelEntries[menuY + 1].fallback, white, 20)
+
+        for index, entry in ipairs(settingsWheelEntries) do
+            local option = index - 1
+            local selected = option == menuY
+            local x = entry.x
+            local y = entry.y
+            local tileColor = selected and themeCol or Color.new(3, 12, 18, 160)
+            local lineColor = selected and Color.new(Color.getR(themeCol), Color.getG(themeCol), Color.getB(themeCol), 225) or Color.new(72, 132, 145, 115)
+            local icon = _G[entry.icon]
+            local label = lang_lines[entry.label] or entry.fallback
+
+            drawHudLine(480, x, 270, y, Color.new(42, 95, 108, 92))
+            Graphics.fillRect(x - 68, x + 68, y - 28, y + 30, tileColor)
+            drawHudLine(x - 68, x - 48, y - 28, y - 28, lineColor)
+            drawHudLine(x - 68, x - 68, y - 28, y - 10, lineColor)
+            drawHudLine(x + 48, x + 68, y + 30, y + 30, lineColor)
+            drawHudLine(x + 68, x + 68, y + 10, y + 30, lineColor)
+
+            if icon ~= nil then
+                Graphics.drawImage(x - 14, y - 21, icon)
+            end
+            local labelWidth = Font.getTextWidth(fnt20, label)
+            Font.print(fnt20, x - labelWidth / 2, y + 5, label, white)
+
+            if selected then
+                Graphics.fillRect(x - 18, x + 18, y + 26, y + 28, Color.new(Color.getR(themeCol), Color.getG(themeCol), Color.getB(themeCol), 255))
+            end
+        end
+
         -- MENU 2 - FUNCTIONS
         status = System.getMessageState()
         if status ~= RUNNING then
-            
-            if (Controls.check(pad, SCE_CTRL_CROSS_MAP) and not Controls.check(oldpad, SCE_CTRL_CROSS_MAP)) then
-
-                -- MENU 2 / #0 Search
-                if menuY == 0 then
-                    -- Search
-                    if hasTyped==false then
-                        Keyboard.start(tostring(lang_lines.Search), "", 512, TYPE_LATIN, MODE_TEXT)
-                        hasTyped=true
-                        keyboard_search=true
+            local touchedOption = nil
+            if x1 ~= nil and y1 ~= nil then
+                if settingsWheelTouchDown == false then
+                    settingsWheelTouchDown = true
+                    for index, entry in ipairs(settingsWheelEntries) do
+                        if math.abs(x1 - entry.x) <= 68 and math.abs(y1 - entry.y) <= 30 then
+                            touchedOption = index - 1
+                            break
+                        end
                     end
-                elseif menuY == 1 then -- Categories
-                    showMenu = 3 
-                    menuY = 0
-                elseif menuY == 2 then -- Theme
-                    showMenu = 4 
-                    menuY = 0
-                elseif menuY == 3 then -- Audio
-                    showMenu = 12 
-                    menuY = 0
-                elseif menuY == 4 then -- Artwork
-                    showMenu = 5 
-                    menuY = 0
-                elseif menuY == 5 then -- Scan Settings
-                    showMenu = 6 
-                    menuY = 0
-                elseif menuY == 6 then -- Other Settings
-                    showMenu = 19
-                    menuY = 0
-                elseif menuY == 7 then -- Language
-                    if chooseLanguage < 21 then
-                        chooseLanguage = chooseLanguage + 1
-                    else
-                        chooseLanguage = 0
-                    end
-                    ChangeLanguage(xsetLanguageLookup(chooseLanguage))
-                else
                 end
+            else
+                settingsWheelTouchDown = false
+            end
 
-                --Save settings
-                SaveSettings()
-
-            elseif (Controls.check(pad, SCE_CTRL_UP)) and not (Controls.check(oldpad, SCE_CTRL_UP)) then
-                state = Keyboard.getState()
-                if state ~= RUNNING then
-                    if menuY > 0 then
-                        menuY = menuY - 1
-                        else
-                        menuY=menuItems
-                    end
-                else
-                end
-            elseif (Controls.check(pad, SCE_CTRL_DOWN)) and not (Controls.check(oldpad, SCE_CTRL_DOWN)) then
-                state = Keyboard.getState()
-                if state ~= RUNNING then
-                    if menuY < menuItems then
-                        menuY = menuY + 1
-                        else
-                        menuY=0
-                    end
-                else
-                end
-            elseif (Controls.check(pad, SCE_CTRL_TRIANGLE) and not Controls.check(oldpad, SCE_CTRL_TRIANGLE)) then
-                showMenu = 7 
+            if touchedOption ~= nil then
+                menuY = touchedOption
+                activate_settings_wheel_option(touchedOption)
+            elseif Controls.check(pad, SCE_CTRL_CROSS_MAP) and not Controls.check(oldpad, SCE_CTRL_CROSS_MAP) then
+                activate_settings_wheel_option(menuY)
+            elseif Controls.check(pad, SCE_CTRL_TRIANGLE) and not Controls.check(oldpad, SCE_CTRL_TRIANGLE) then
+                showMenu = 7
                 menuY = 0
+            else
+                local dx = 0
+                local dy = 0
+                if Controls.check(pad, SCE_CTRL_LEFT) then dx = dx - 1 end
+                if Controls.check(pad, SCE_CTRL_RIGHT) then dx = dx + 1 end
+                if Controls.check(pad, SCE_CTRL_UP) then dy = dy + 1 end
+                if Controls.check(pad, SCE_CTRL_DOWN) then dy = dy - 1 end
+
+                if dx ~= 0 or dy ~= 0 then
+                    menuY = settings_wheel_sector(dx, dy)
+                else
+                    local analogX = mx - 128
+                    local analogY = 128 - my
+                    if math.abs(analogX) > 36 or math.abs(analogY) > 36 then
+                        menuY = settings_wheel_sector(analogX, analogY)
+                    end
+                end
             end
         end
 
