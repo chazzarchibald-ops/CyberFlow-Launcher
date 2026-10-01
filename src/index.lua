@@ -3265,6 +3265,7 @@ local cyberpunkThemes = {
 }
 local cyberpunkThemeCount = 12
 local selectedCyberpunkTheme = 0
+local previewCyberpunkTheme = 0
 local cyberpunkThemeMusicPath = nil
 local cyberpunkVideoPath = nil
 local cyberpunkVideoEnabled = false
@@ -4026,6 +4027,7 @@ end
 if cyberpunkThemes[selectedCyberpunkTheme] == nil then
     selectedCyberpunkTheme = 0
 end
+previewCyberpunkTheme = selectedCyberpunkTheme
 
 local activeCyberpunkTheme = cyberpunkThemes[selectedCyberpunkTheme]
 if activeCyberpunkTheme.folder ~= nil then
@@ -17711,7 +17713,7 @@ while true do
 
         -- MENU 4 / #7 Cyberpunk Theme
         Font.print(fnt22, setting_x, setting_y7, lang_lines.Cyberpunk_Theme_colon or "Cyberpunk Theme: ", white)
-        Font.print(fnt22, setting_x_offset, setting_y7, cyberpunkThemes[selectedCyberpunkTheme].name, white)
+        Font.print(fnt22, setting_x_offset, setting_y7, cyberpunkThemes[previewCyberpunkTheme].name, white)
 
 
         -- MENU 4 - FUNCTIONS
@@ -17787,12 +17789,10 @@ while true do
                         setChangeViews = 1
                     end
                 elseif menuY == 7 then -- #7 Cyberpunk theme
-                    if selectedCyberpunkTheme < cyberpunkThemeCount then
-                        selectedCyberpunkTheme = selectedCyberpunkTheme + 1
-                    else
-                        selectedCyberpunkTheme = 0
+                    if selectedCyberpunkTheme ~= previewCyberpunkTheme then
+                        selectedCyberpunkTheme = previewCyberpunkTheme
+                        restart_after_frame = true
                     end
-                    restart_after_frame = true
                 end
 
                 --Save settings
@@ -17809,6 +17809,22 @@ while true do
                     menuY = menuY + 1
                     else
                     menuY=0
+                end
+            elseif (Controls.check(pad, SCE_CTRL_LEFT)) and not (Controls.check(oldpad, SCE_CTRL_LEFT)) then
+                if menuY == 7 then
+                    if previewCyberpunkTheme > 0 then
+                        previewCyberpunkTheme = previewCyberpunkTheme - 1
+                    else
+                        previewCyberpunkTheme = cyberpunkThemeCount
+                    end
+                end
+            elseif (Controls.check(pad, SCE_CTRL_RIGHT)) and not (Controls.check(oldpad, SCE_CTRL_RIGHT)) then
+                if menuY == 7 then
+                    if previewCyberpunkTheme < cyberpunkThemeCount then
+                        previewCyberpunkTheme = previewCyberpunkTheme + 1
+                    else
+                        previewCyberpunkTheme = 0
+                    end
                 end
             end
             
