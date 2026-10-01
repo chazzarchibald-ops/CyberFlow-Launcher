@@ -3144,6 +3144,39 @@ local delayTouch = 8.0
 local delayButton = 8.0
 local hideBoxes = 0.3 -- used to be 1
 local prvRotY = 0
+local halfAlphaCoverTint = Color.new(255, 255, 255, 128)
+local halfAlphaCoverCache = {}
+
+local function free_half_alpha_cover(icon, deferred)
+    local fadedIcon = halfAlphaCoverCache[icon]
+    if fadedIcon ~= nil then
+        halfAlphaCoverCache[icon] = nil
+        if deferred and queue_deferred_free_image then
+            queue_deferred_free_image(fadedIcon)
+        else
+            Graphics.freeImage(fadedIcon)
+        end
+    end
+end
+
+local function free_cover_image(icon, deferred)
+    if icon == nil then
+        return
+    end
+
+    free_half_alpha_cover(icon, deferred)
+    if deferred and queue_deferred_free_image then
+        queue_deferred_free_image(icon)
+    else
+        Graphics.freeImage(icon)
+    end
+end
+
+local function clear_half_alpha_cover_cache()
+    for icon in pairs(halfAlphaCoverCache) do
+        free_half_alpha_cover(icon, false)
+    end
+end
 
 local gettingCovers = false
 local gettingBackgrounds = false
@@ -3154,9 +3187,9 @@ local restart_after_frame = false
 -- Init Colors
 local black = Color.new(0, 0, 0)
 local grey = Color.new(45, 45, 45)
-local darkalpha = Color.new(40, 40, 40, 180)
+local darkalpha = Color.new(40, 40, 40, 128)
 local dark = Color.new(40, 40, 40, 255)
-local blackalpha = Color.new(0, 0, 0, 215)
+local blackalpha = Color.new(0, 0, 0, 128)
 local lightgrey = Color.new(58, 58, 58)
 local white = Color.new(255, 255, 255)
 local red = Color.new(190, 0, 0)
@@ -3167,14 +3200,22 @@ local purple = Color.new(151, 0, 185)
 local darkpurple = Color.new(77, 4, 160)
 local orange = Color.new(220, 120, 0)
 local bg = Color.new(153, 217, 234)
-local themeCol = Color.new(2, 72, 158)
+local themeCol = Color.new(2, 72, 158, 128)
 loading_bar_bg = Color.new(255,255,255,50)
 transparent = Color.new(255, 255, 255, 0)
 timercolor = transparent
 darkgrey = Color.new(61, 68, 80)
  
 img_loader_green = Color.new(0, 255, 0)
-img_loader_blackalpha = Color.new(0, 0, 0, 150)
+img_loader_blackalpha = Color.new(0, 0, 0, 128)
+
+local drawFillRect = Graphics.fillRect
+Graphics.fillRect = function(x1, x2, y1, y2, color)
+    if Color.getA(color) > 128 then
+        color = Color.new(Color.getR(color), Color.getG(color), Color.getB(color), 128)
+    end
+    return drawFillRect(x1, x2, y1, y2, color)
+end
 
 local targetX = 0
 local xstart = 0
@@ -4160,13 +4201,14 @@ function SetThemeColor()
     else
         themeCol = blue -- default blue
     end
+    themeCol = Color.new(Color.getR(themeCol), Color.getG(themeCol), Color.getB(themeCol), 128)
 end
 SetThemeColor()
 
 function ApplyCyberpunkThemeColors()
     local selectedTheme = cyberpunkThemes[selectedCyberpunkTheme]
     if selectedTheme ~= nil and selectedTheme.accent ~= nil then
-        themeCol = Color.new(selectedTheme.accent[1], selectedTheme.accent[2], selectedTheme.accent[3])
+        themeCol = Color.new(selectedTheme.accent[1], selectedTheme.accent[2], selectedTheme.accent[3], 128)
         white = Color.new(selectedTheme.text[1], selectedTheme.text[2], selectedTheme.text[3])
     end
 end
@@ -5234,6 +5276,7 @@ end
     end
 
 function FreeMemory()
+    clear_half_alpha_cover_cache()
     if cyberpunkVideoEnabled then
         Video.term()
         cyberpunkVideoEnabled = false
@@ -13745,6 +13788,49 @@ end
 
 cover_widths_x_bonus = 0
 
+local function get_half_alpha_cover(icon)
+    if icon == nil then
+        return icon
+    end
+
+    if halfAlphaCoverCache[icon] ~= nil then
+        return halfAlphaCoverCache[icon]
+    end
+
+    local success, fadedIcon = pcall(function()
+        local sourceWidth = Graphics.getImageWidth(icon)
+        local sourceHeight = Graphics.getImageHeight(icon)
+        local fadedWidth = math.max(1, math.floor(sourceWidth / 2))
+        local fadedHeight = math.max(1, math.floor(sourceHeight / 2))
+        local image = Graphics.createImage(fadedWidth, fadedHeight, Color.new(0, 0, 0, 0), MEM_VRAM)
+
+        for y = 0, fadedHeight - 1 do
+            local sourceY = math.min(sourceHeight - 1, y * 2)
+            for x = 0, fadedWidth - 1 do
+                local sourceX = math.min(sourceWidth - 1, x * 2)
+                local pixel = Graphics.getPixel(sourceX, sourceY, icon)
+                local fadedPixel = Color.new(
+                    Color.getR(pixel),
+                    Color.getG(pixel),
+                    Color.getB(pixel),
+                    math.floor(Color.getA(pixel) / 2)
+                )
+                Graphics.drawPixel(x, y, fadedPixel, image)
+            end
+        end
+
+        Graphics.setImageFilters(image, FILTER_LINEAR, FILTER_LINEAR)
+        return image
+    end)
+
+    if success and fadedIcon ~= nil then
+        halfAlphaCoverCache[icon] = fadedIcon
+        return fadedIcon
+    end
+
+    return icon
+end
+
 local function DrawCover_Flat(x, y, text, color, icon, sel)
 
     if sel == p then
@@ -13753,7 +13839,8 @@ local function DrawCover_Flat(x, y, text, color, icon, sel)
 
     Graphics.setImageFilters(icon, FILTER_LINEAR, FILTER_LINEAR)
 
-    Graphics.drawScaleImage(x, fv_cover_y, icon, fv_cover_scale, fv_cover_height / cover_height)
+    local coverTint = sel == p and white or halfAlphaCoverTint
+    Graphics.drawScaleImage(x, fv_cover_y, icon, fv_cover_scale, fv_cover_height / cover_height, coverTint)
 
     -- Add dark overlay to cover left of current
     if sel == master_index -1 then
@@ -13786,7 +13873,8 @@ local function DrawCover_Flat_Smooth(x, y, text, color, icon, sel)
     Graphics.setImageFilters(icon, FILTER_LINEAR, FILTER_LINEAR)
 
     -- Use precise positioning for the actual cover image
-    Graphics.drawScaleImage(precise_x, fv_cover_y, icon, fv_cover_scale, fv_cover_height / cover_height)
+    local coverTint = sel == p and white or halfAlphaCoverTint
+    Graphics.drawScaleImage(precise_x, fv_cover_y, icon, fv_cover_scale, fv_cover_height / cover_height, coverTint)
 
     -- Add dark overlay to cover left of current
     if sel == master_index -1 then
@@ -13845,6 +13933,10 @@ end
 
 local function DrawCover(x, y, text, icon, sel, apptype, cur_p)
     load_cover_models_for_app_type(apptype)
+
+    if not sel then
+        icon = get_half_alpha_cover(icon)
+    end
 
     rot = 0
     extraz = 0
@@ -14258,6 +14350,7 @@ function free_loaded_icon(file)
             Threads.remove(file)
         end
         if file.ricon then
+            free_half_alpha_cover(file.ricon, true)
             queue_deferred_free_image(file.ricon)
             file.ricon = nil
         end
@@ -14881,12 +14974,14 @@ function drawCategory (def)
                         -- Check if this is the default placeholder image (always scale to predicted width)
                         if icon == imgCoverTmp or not file.precomputed_width then
                             -- Scale to predicted width for uncomputed covers or default placeholder
-                            Graphics.drawScaleImage(cover_x, fv_cover_y, icon, render_width / Graphics.getImageWidth(icon), fv_cover_height / Graphics.getImageHeight(icon))
+                            local coverTint = l == p and white or halfAlphaCoverTint
+                            Graphics.drawScaleImage(cover_x, fv_cover_y, icon, render_width / Graphics.getImageWidth(icon), fv_cover_height / Graphics.getImageHeight(icon), coverTint)
                         else
                             -- Use actual scale for computed covers
                             local cover_height = Graphics.getImageHeight(icon)
                             local cover_scale = fv_cover_height / cover_height
-                            Graphics.drawScaleImage(cover_x, fv_cover_y, icon, cover_scale, fv_cover_height / cover_height)
+                            local coverTint = l == p and white or halfAlphaCoverTint
+                            Graphics.drawScaleImage(cover_x, fv_cover_y, icon, cover_scale, fv_cover_height / cover_height, coverTint)
                         end
 
                         -- Add dark overlay to cover left of current with very subtle fade-in
@@ -14980,7 +15075,7 @@ function drawCategory (def)
                             Threads.remove(file)
                         end
                         if file.ricon then
-                            Graphics.freeImage(file.ricon)
+                            free_cover_image(file.ricon, false)
                             file.ricon = nil
                         end
                     end
@@ -15073,7 +15168,7 @@ function drawCategory (def)
                         Threads.remove(file)
                     end
                     if file.ricon then
-                        Graphics.freeImage(file.ricon)
+                        free_cover_image(file.ricon, false)
                         file.ricon = nil
                     end
                 end
@@ -15169,7 +15264,7 @@ function drawCategory (def)
                     Threads.remove(file)
                 end
                 if file.ricon then
-                    Graphics.freeImage(file.ricon)
+                    free_cover_image(file.ricon, false)
                     file.ricon = nil
                 end
             end
