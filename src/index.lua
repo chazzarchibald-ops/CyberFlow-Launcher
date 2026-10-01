@@ -15686,6 +15686,333 @@ function settingsWheelUI.move(current, dx, dy)
     return best
 end
 
+-- Cyberpunk scanner style layout for the game info screen (Triangle on a game)
+local cyberInfoUI = {
+    tab = 0,
+    fonts = {},
+    bands = nil,
+    consoleIcon = nil,
+    consoleIconPath = nil,
+    cyan = Color.new(84, 220, 244, 245),
+    text = Color.new(226, 248, 252, 255),
+    label = Color.new(168, 200, 212, 255),
+    yellow = Color.new(248, 208, 80, 255),
+    bodyOn = Color.new(8, 30, 48, 224),
+    idleBody = Color.new(12, 30, 48, 205),
+    idleLine = Color.new(52, 104, 140, 235),
+    redBody = Color.new(136, 28, 42, 218),
+    redLine = Color.new(214, 58, 70, 240),
+    redText = Color.new(255, 140, 140, 255),
+    hatch = Color.new(52, 6, 14, 150),
+    footerText = Color.new(240, 88, 72, 255),
+    pillBody = Color.new(6, 18, 30, 235),
+    pillText = Color.new(206, 232, 240, 255),
+}
+
+function cyberInfoUI.font(size)
+    local fonts = cyberInfoUI.fonts
+    if fonts[size] == nil then
+        fonts[size] = Font.load("app0:/DATA/" .. fontname)
+        Font.setPixelSizes(fonts[size], size)
+    end
+    return fonts[size]
+end
+
+function cyberInfoUI.fit(font, text, maxWidth)
+    while Font.getTextWidth(font, text) > maxWidth and string.len(text) > 4 do
+        text = string.sub(text, 1, string.len(text) - 4) .. "..."
+    end
+    return text
+end
+
+function cyberInfoUI.cleanLabel(text, fallback)
+    return string.upper((tostring(text or fallback):gsub("%s*:%s*$", "")))
+end
+
+-- Two pixel wide line, offset inward from the edge it follows
+function cyberInfoUI.line2(x1, x2, y1, y2, color)
+    drawHudLine(x1, x2, y1, y2, color)
+    if y1 == y2 then
+        drawHudLine(x1, x2, y1 + 1, y2 + 1, color)
+    elseif x1 == x2 then
+        drawHudLine(x1 + 1, x2 + 1, y1, y2, color)
+    end
+end
+
+function cyberInfoUI.background()
+    local ui = cyberInfoUI
+    if ui.bands == nil then
+        ui.bands = {}
+        for band = 0, 67 do
+            local edge = math.abs(band / 67 - 0.5) * 2
+            ui.bands[band] = Color.new(24, 4, 12, math.floor(45 + 115 * edge * edge))
+        end
+        ui.side = {}
+        for strip = 0, 9 do
+            ui.side[strip] = Color.new(70, 4, 14, math.floor(90 * (1 - strip / 10)))
+        end
+        ui.cornerLine = Color.new(214, 58, 70, 150)
+    end
+    for band = 0, 67 do
+        drawFillRect(0, 960, band * 8, band * 8 + 8, ui.bands[band])
+    end
+    for strip = 0, 9 do
+        drawFillRect(strip * 12, strip * 12 + 12, 0, 544, ui.side[strip])
+        drawFillRect(960 - strip * 12 - 12, 960 - strip * 12, 0, 544, ui.side[strip])
+    end
+    drawHudLine(18, 150, 40, 40, ui.cornerLine)
+    drawHudLine(780, 872, 52, 52, ui.cornerLine)
+    drawHudLine(91, 182, 469, 469, ui.cornerLine)
+    drawHudLine(780, 872, 469, 469, ui.cornerLine)
+end
+
+function cyberInfoUI.ramBar()
+    local segments = 41
+    local maximumCategory = math.max(1, count_of_categories - 1)
+    local fill = math.ceil(math.min(showCat, maximumCategory) * segments / maximumCategory)
+    if showCat <= 0 then
+        fill = 0
+    elseif showCat >= 50 then
+        fill = segments
+    end
+
+    local label = "CYBERDECK RAM: " .. tostring(cyberdeck_category_name())
+    while Font.getTextWidth(fnt22, label) > 440 and string.len(label) > 18 do
+        label = string.sub(label, 1, string.len(label) - 4) .. "..."
+    end
+    Font.print(fnt22, 275, 15, label, Color.new(86, 228, 255, 230))
+
+    local active = Color.new(78, 220, 255, 235)
+    local inactive = Color.new(236, 62, 82, 88)
+    for segment = 1, segments do
+        local segmentX = 275 + (segment - 1) * 10
+        local segmentColor = segment <= fill and active or inactive
+        drawFillRect(segmentX, segmentX + 8, 42, 60, segmentColor)
+        drawFillRect(segmentX + 1, segmentX + 7, 60, 64, segmentColor)
+    end
+end
+
+-- Draws the DATA / CONSOLE tabbed window; returns the body top and bottom
+function cyberInfoUI.panel(x, y, w, tabH, bodyH, active, labels)
+    local ui = cyberInfoUI
+    local c = 12
+    local t = 8
+    local y0 = y + tabH
+    local y1 = y0 + bodyH
+    local half = math.floor(w / 2)
+
+    drawFillRect(x, x + w, y0, y1 - c, ui.bodyOn)
+    for j = 0, c - 1 do
+        drawFillRect(x + j + 1, x + w - j - 1, y1 - c + j, y1 - c + j + 1, ui.bodyOn)
+    end
+
+    for index = 0, 1 do
+        local tx = x + index * half
+        local tw = index == 0 and half or (w - half)
+        local labelColor = ui.text
+
+        if index == active then
+            drawFillRect(tx, tx + tw, y, y0 + 1, ui.bodyOn)
+            ui.line2(tx, tx + tw - 1, y, y, ui.cyan)
+            ui.line2(tx, tx, y, y0, ui.cyan)
+            ui.line2(tx + tw - 2, tx + tw - 2, y, y0, ui.cyan)
+        else
+            labelColor = ui.redText
+            for j = 0, t - 1 do
+                local left = index == 0 and tx + (t - j) or tx
+                local right = index == 1 and tx + tw - (t - j) or tx + tw
+                drawFillRect(left, right, y + j, y + j + 1, ui.redBody)
+            end
+            drawFillRect(tx, tx + tw, y + t, y0, ui.redBody)
+
+            for s = 0, tw + (y0 - y - t), 8 do
+                local startX = s <= tw and tx + s or tx + tw
+                local startY = s <= tw and y + t or y + t + (s - tw)
+                local endX = s >= (y0 - y - t) and tx + s - (y0 - y - t) or tx
+                local endY = s >= (y0 - y - t) and y0 or y + t + s
+                drawHudLine(startX, endX, startY, endY, ui.hatch)
+            end
+
+            local topLeft = index == 0 and tx + t or tx
+            local topRight = index == 1 and tx + tw - t or tx + tw - 1
+            ui.line2(topLeft, topRight, y, y, ui.redLine)
+            if index == 0 then
+                drawHudLine(tx, tx + t, y + t, y, ui.redLine)
+                ui.line2(tx, tx, y + t, y0, ui.redLine)
+            else
+                drawHudLine(tx + tw - t, tx + tw - 1, y, y + t, ui.redLine)
+                ui.line2(tx + tw - 2, tx + tw - 2, y + t, y0, ui.redLine)
+            end
+        end
+
+        local tabLabel = ui.cleanLabel(labels[index + 1], "")
+        Font.print(ui.font(16), tx + 14, y + math.floor((tabH - 20) / 2) - 1, tabLabel, labelColor)
+    end
+
+    -- Body outline, leaving a gap under the active tab
+    if active == 0 then
+        ui.line2(x + half, x + w - 1, y0, y0, ui.cyan)
+    else
+        ui.line2(x, x + half, y0, y0, ui.cyan)
+    end
+    ui.line2(x, x, y0, y1 - c, ui.cyan)
+    ui.line2(x + w - 2, x + w - 2, y0, y1 - c, ui.cyan)
+    drawHudLine(x, x + c, y1 - c, y1 - 1, ui.cyan)
+    drawHudLine(x + w - 1, x + w - c - 1, y1 - c, y1 - 1, ui.cyan)
+    ui.line2(x + c, x + w - c - 1, y1 - 2, y1 - 2, ui.cyan)
+
+    return y0, y1
+end
+
+function cyberInfoUI.dataRows(x, y0, rows)
+    local ui = cyberInfoUI
+    local labelFont = ui.font(12)
+    local valueFont = ui.font(18)
+    for index, row in ipairs(rows) do
+        local rowY = y0 + 12 + (index - 1) * 31
+        local valueX = x + 16
+        Font.print(labelFont, x + 16, rowY, row.label, ui.label)
+        if row.icon ~= nil then
+            local iconScale = 20 / math.max(Graphics.getImageWidth(row.icon), Graphics.getImageHeight(row.icon))
+            Graphics.drawScaleImage(valueX, rowY + 13, row.icon, iconScale, iconScale)
+            valueX = valueX + 28
+        end
+        Font.print(valueFont, valueX, rowY + 11, ui.fit(valueFont, row.value, 260 - (valueX - x)), row.color or ui.cyan)
+    end
+end
+
+function cyberInfoUI.loadConsoleIcon(consoleApptype)
+    local ui = cyberInfoUI
+    local path = nil
+    for _, system in pairs(SystemsToScan) do
+        if system.apptype == consoleApptype and system.icon ~= nil then
+            path = "app0:/DATA/" .. system.icon
+            break
+        end
+    end
+
+    if path ~= ui.consoleIconPath then
+        if ui.consoleIcon ~= nil then
+            Graphics.freeImage(ui.consoleIcon)
+            ui.consoleIcon = nil
+        end
+        ui.consoleIconPath = path
+        if path ~= nil then
+            local loaded, image = pcall(Graphics.loadImage, path)
+            if loaded then
+                ui.consoleIcon = image
+            end
+        end
+    end
+    return ui.consoleIcon
+end
+
+function cyberInfoUI.consoleView(x, y0, w, consoleApptype, fallbackName)
+    local ui = cyberInfoUI
+    local name = fallbackName
+    local showcat = AppTypeToShowCat[consoleApptype]
+    if showcat ~= nil then
+        name = get_category_label(showcat)
+    end
+
+    Font.print(ui.font(12), x + 16, y0 + 12, "CONSOLE", ui.label)
+    local nameFont = ui.font(18)
+    Font.print(nameFont, x + 16, y0 + 23, ui.fit(nameFont, string.upper(tostring(name)), w - 32), ui.yellow)
+
+    local icon = ui.loadConsoleIcon(consoleApptype)
+    if icon ~= nil then
+        local size = 112
+        local scale = size / 128
+        local iconX = x + math.floor((w - size) / 2)
+        local iconY = y0 + 62
+        Graphics.drawScaleImage(iconX, iconY, icon, scale, scale)
+        drawHudLine(iconX - 6, iconX + 10, iconY - 6, iconY - 6, ui.cyan)
+        drawHudLine(iconX - 6, iconX - 6, iconY - 6, iconY + 10, ui.cyan)
+        drawHudLine(iconX + size - 10, iconX + size + 6, iconY + size + 6, iconY + size + 6, ui.cyan)
+        drawHudLine(iconX + size + 6, iconX + size + 6, iconY + size - 10, iconY + size + 6, ui.cyan)
+    end
+end
+
+function cyberInfoUI.pill(x, y, text, color)
+    local ui = cyberInfoUI
+    local font = ui.font(11)
+    local width = Font.getTextWidth(font, text) + 10
+    drawFillRect(x, x + width, y, y + 13, ui.pillBody)
+    drawHudLine(x, x + width - 1, y, y, color)
+    drawHudLine(x, x + width - 1, y + 12, y + 12, color)
+    drawHudLine(x, x, y, y + 12, color)
+    drawHudLine(x + width - 1, x + width - 1, y, y + 12, color)
+    Font.print(font, x + 5, y, text, color)
+    return width + 5
+end
+
+-- Quickhack style button with a chamfered outline, status pills and an icon box
+function cyberInfoUI.hackButton(x, y, w, h, selected, title, pills, icon)
+    local ui = cyberInfoUI
+    local c1, c2 = 8, 10
+    local line = selected and ui.cyan or ui.idleLine
+
+    settingsWheelUI.chamfer(x, y, w, h, c1, c2, selected and ui.bodyOn or ui.idleBody)
+    settingsWheelUI.outline(x, y, w, h, c1, c2, line)
+    if selected then
+        settingsWheelUI.outline(x + 1, y + 1, w - 2, h - 2, c1 - 1, c2 - 1, line)
+    end
+
+    local boxSize = h - 12
+    local boxX = x + w - boxSize - 16
+    drawHudLine(boxX, boxX + boxSize, y + 6, y + 6, line)
+    drawHudLine(boxX, boxX + boxSize, y + 6 + boxSize, y + 6 + boxSize, line)
+    drawHudLine(boxX, boxX, y + 6, y + 6 + boxSize, line)
+    drawHudLine(boxX + boxSize, boxX + boxSize, y + 6, y + 6 + boxSize, line)
+    if icon ~= nil then
+        Graphics.drawScaleImage(boxX + 3, y + 9, icon, (boxSize - 6) / 30, (boxSize - 6) / 30, selected and ui.cyan or ui.label)
+    end
+
+    local titleFont = ui.font(16)
+    Font.print(titleFont, x + 14, y + 1, ui.fit(titleFont, title, boxX - x - 24), ui.text)
+
+    local pillX = x + 14
+    for _, pill in ipairs(pills) do
+        pillX = pillX + ui.pill(pillX, y + h - 17, pill.text, pill.color)
+    end
+end
+
+function cyberInfoUI.nameTag(name)
+    local ui = cyberInfoUI
+    local font = ui.font(16)
+    local text = ui.fit(font, string.upper(tostring(name)), 280)
+    local total = Font.getTextWidth(font, text) + 28
+    local startX = math.floor(480 - total / 2)
+    settingsWheelUI.hexagon(startX + 9, 106, 9, ui.cyan)
+    Font.print(font, startX + 28, 95, text, ui.text)
+end
+
+function cyberInfoUI.footer()
+    local ui = cyberInfoUI
+    local entries = {
+        { text = lang_lines.Close, icon = btnO },
+        { text = "Switch Tab", pill = "R1" },
+        { text = lang_lines.Options, icon = btnT },
+        { text = lang_lines.Select, icon = btnX },
+    }
+    local cursor = 928
+    for _, entry in ipairs(entries) do
+        local textX = cursor - Font.getTextWidth(fnt20, entry.text)
+        Font.print(fnt20, textX, 508, entry.text, ui.footerText)
+        local iconX = textX - 28
+        if entry.icon ~= nil then
+            Graphics.drawImage(iconX, 510, entry.icon)
+        else
+            drawHudLine(iconX, iconX + 24, 512, 512, ui.cyan)
+            drawHudLine(iconX, iconX + 24, 527, 527, ui.cyan)
+            drawHudLine(iconX, iconX, 512, 527, ui.cyan)
+            drawHudLine(iconX + 24, iconX + 24, 512, 527, ui.cyan)
+            Font.print(ui.font(11), iconX + 5, 513, entry.pill, ui.cyan)
+        end
+        cursor = iconX - 22
+    end
+end
+
 local function activate_settings_wheel_option(option)
     if option == 0 then
         if hasTyped == false then
@@ -16749,27 +17076,7 @@ while true do
     elseif showMenu == 1 then
         
         -- PREVIEW
-        -- Footer buttons and icons
-        -- Get text widths for positioning
-        label1 = Font.getTextWidth(fnt20, lang_lines.Close)--Close
-        label2 = Font.getTextWidth(fnt20, lang_lines.Select)--Select
-        label3 = Font.getTextWidth(fnt20, lang_lines.Options)--Options
-        -- label4 = Font.getTextWidth(fnt20, lang_lines.Favorite)--Favourite
-
-        Graphics.drawImage(900-label1, 510, btnO)
-        Font.print(fnt20, 900+28-label1, 508, lang_lines.Close, white)--Close
-
-        Graphics.drawImage(900-(btnMargin * 2)-label1-label2, 510, btnX)
-        Font.print(fnt20, 900+28-(btnMargin * 2)-label1-label2, 508, lang_lines.Select, white)--Select
-
-        Graphics.drawImage(900-(btnMargin * 4)-label1-label2-label3, 510, btnT)
-        Font.print(fnt20, 900+28-(btnMargin * 4)-label1-label2-label3, 508, lang_lines.Options, white)--Options
-        
-        if wide_getinfoscreen == true then
-            Graphics.fillRect(24, 470+24, 24, 470, darkalpha)
-        else
-            Graphics.fillRect(24, 470, 24, 470, darkalpha)
-        end
+        cyberInfoUI.background()
 
         Render.setCamera(0, 0, 0, 0.0, 0.0, 0.0)
         if inPreview == false then
@@ -16945,13 +17252,11 @@ while true do
             menuY=0
             tmpappcat=0
             tmpimagecat=0
+            cyberInfoUI.tab = 0
             inPreview = true
         end
         
-        -- animate cover zoom in
-        if prevX < 1.4 then
-            prevX = prevX + 0.1
-        end
+        -- animate cover zoom in (the box art stays centred on screen)
         if prevZ < 1 then
             prevZ = prevZ + 0.06
         end
@@ -16969,9 +17274,6 @@ while true do
         -- Calculate ratio size to use
         if original_w == 128 then ratio_w = 1.0 else ratio_w = 128 / original_w end
         if original_h == 128 then ratio_h = 1.0 else ratio_h = 128 / original_h end
-
-        -- Draw resized image  
-        Graphics.drawScaleImage(50, 50, iconTmp, ratio_w, ratio_h)
 
         -- txtname = string.sub(app_title, 1, 32) .. "\n" .. string.sub(app_title, 33)
         txtname = wraptextlength(app_title, 32)
@@ -17277,68 +17579,62 @@ while true do
             tmpapptype = lang_lines.Homebrew 
         end
     
-        Font.print(fnt22, 50, 190, txtname, white)-- app name
-
-        -- Draw conditional icons
-
-            local icon_x = 420
-            if wide_getinfoscreen == true then
-                icon_x = icon_x + 24
-            end
-            local icon_y = 50
-            local icon_space = 37
-
-            local function draw_next_icon(icon)
-                Graphics.drawImage(icon_x, icon_y, icon)
-                icon_x = icon_x - icon_space
-            end
-
-            if cartridge_flag == true then
-                if xCatLookup(showCat)[p].cartridge_inserted == true then
-                    draw_next_icon(cart_icon_on)
-                else
-                    draw_next_icon(cart_icon_off)
-                end
-            end
-
-            if favourite_flag == true then
-                draw_next_icon(imgFavorite_large_on)
+        -- Status icons (cartridge, favourite, hidden) shown in the data window
+        local infoIcons = {}
+        if cartridge_flag == true then
+            if xCatLookup(showCat)[p].cartridge_inserted == true then
+                table.insert(infoIcons, cart_icon_on)
             else
-                draw_next_icon(imgFavorite_large_off)
+                table.insert(infoIcons, cart_icon_off)
             end
+        end
 
-            if hide_game_flag == true then
-                draw_next_icon(imgHidden_small_on)
-            end
+        if favourite_flag == true then
+            table.insert(infoIcons, imgFavorite_large_on)
+        else
+            table.insert(infoIcons, imgFavorite_large_off)
+        end
 
+        if hide_game_flag == true then
+            table.insert(infoIcons, imgHidden_small_on)
+        end
+
+        -- Data window rows
+        local appIdLabel = cyberInfoUI.cleanLabel(lang_lines.App_ID_colon, "App ID")
+        local versionLabel = cyberInfoUI.cleanLabel(lang_lines.Version_colon, "Version")
+        local sizeLabel = cyberInfoUI.cleanLabel(lang_lines.Size_colon, "Size")
+        local infoRows = {
+            { label = "GAME", value = tostring(app_title), color = cyberInfoUI.yellow, icon = iconTmp },
+            { label = "PLATFORM", value = tostring(tmpapptype) },
+        }
+        local function add_info_row(label, value)
+            table.insert(infoRows, { label = label, value = tostring(value) })
+        end
 
         -- 0 Homebrew, 1 vita, 2 psp, 3 psx, 5+ Retro, 34 FBA, 35 Mame 2003+, 36 Mame 2000, 37 NeoGeo, 39 ps mobile
-
-        -- if apptype == 0 or apptype == 1 or apptype == 2 or apptype == 3 or apptype == 39 then
         if apptype == 0 or apptype == 1 or apptype == 39 then
             if string.match (game_path, "pspemu") or string.match (game_path, "ux0:/app/") or string.match (game_path, "ux0:/psm/") then
-                Font.print(fnt22, 50, 240, tmpapptype .. "\n" .. lang_lines.App_ID_colon .. app_titleid .. "\n" .. lang_lines.Version_colon .. app_version .. "\n" .. lang_lines.Size_colon .. game_size, white)-- Draw info
-                --                                               App ID:                                           Version:                                           Size:
+                add_info_row(appIdLabel, app_titleid)
+                add_info_row(versionLabel, app_version)
+                add_info_row(sizeLabel, game_size)
             -- Vita cartridge
             elseif string.match (game_path, "gro0:/app/") then
-                Font.print(fnt22, 50, 240, tmpapptype .. "\n" .. lang_lines.App_ID_colon .. app_titleid .. "\n" .. lang_lines.Size_colon .. game_size, white)-- Draw info
-                --                                               App ID:                                           Size:
-
+                add_info_row(appIdLabel, app_titleid)
+                add_info_row(sizeLabel, game_size)
             else
-                Font.print(fnt22, 50, 240, tmpapptype .. "\n" .. lang_lines.Version_colon .. app_version .. "\n" .. lang_lines.Size_colon .. game_size, white)-- Draw info
-                --                                               Version:                                           Size:
+                add_info_row(versionLabel, app_version)
+                add_info_row(sizeLabel, game_size)
             end
         elseif apptype == 2 or apptype == 3 or apptype == 40 then -- Version removed for psp and psx, scummvm
-            Font.print(fnt22, 50, 240, tmpapptype .. "\n" .. lang_lines.App_ID_colon .. app_titleid .. "\n" .. lang_lines.Size_colon .. game_size, white)-- Draw info
-
+            add_info_row(appIdLabel, app_titleid)
+            add_info_row(sizeLabel, game_size)
         elseif apptype == 34 or apptype == 35 or apptype == 36 or apptype == 37 or apptype == 41 or apptype == 46 then 
-            Font.print(fnt22, 50, 240, tmpapptype .. "\n" .. lang_lines.Size_colon .. game_size, white)-- Draw info
-                --                                           Size:
+            add_info_row(sizeLabel, game_size)
         elseif apptype == 42 then -- Sys app
-            Font.print(fnt22, 50, 240, tmpapptype .. "\n" .. lang_lines.App_ID_colon .. app_titleid, white)-- Draw info
+            add_info_row(appIdLabel, app_titleid)
         else
-            Font.print(fnt22, 50, 240, tmpapptype .. "\n" .. lang_lines.Version_colon .. app_version .. "\n" .. lang_lines.Size_colon .. game_size, white)-- Draw info
-            --                                               Version:                                           Size:
+            add_info_row(versionLabel, app_version)
+            add_info_row(sizeLabel, game_size)
         end
 
 
@@ -17382,9 +17678,6 @@ while true do
 
 
         -- 0 Homebrew, 1 Vita, 2 PSP, 3 PSX, 5+ Retro
-
-        -- Vita and Homebrew
-        -- if folder == true then -- start Disable category override for retro
         local valid_type =
             apptype == 0
             or apptype == 1
@@ -17395,60 +17688,54 @@ while true do
             string.match(game_path, "pspemu")
             or string.match(game_path, "ux0:/app/")
 
-        if valid_type and valid_path then
-             -- start Disable category override for retro
-            if menuY==1 then
-                if wide_getinfoscreen == true then
-                    Graphics.fillRect(24, 470+24, 350 + (menuY * 40), 430 + (menuY * 40), themeCol)-- selection two lines
-                else
-                    Graphics.fillRect(24, 470, 350 + (menuY * 40), 430 + (menuY * 40), themeCol)-- selection two lines
+        local showOverride = valid_type and valid_path
+        -- Download is not available for ps mobile, pico8 and sys apps
+        local showDownload = not (apptype == 39 or apptype == 41 or apptype == 42)
+
+        -- Left: quickhack style action buttons
+        if showDownload or showOverride then
+            load_setting_icons_if_needed()
+            Font.print(cyberInfoUI.font(14), 96, 118, "AVAILABLE ACTIONS:", cyberInfoUI.text)
+
+            local hackY = 144
+            if showDownload then
+                local selected = menuY == 0
+                local downloadTitle = string.upper(tostring(tmpimageText))
+                if not (apptype == 0 or apptype == 1) then
+                    downloadTitle = "< " .. downloadTitle .. " >"
                 end
-            else
-                if wide_getinfoscreen == true then
-                    Graphics.fillRect(24, 470+24, 350 + (menuY * 40), 390 + (menuY * 40), themeCol)-- selection
-                else
-                    Graphics.fillRect(24, 470, 350 + (menuY * 40), 390 + (menuY * 40), themeCol)-- selection
-                end
+                cyberInfoUI.hackButton(selected and 112 or 98, hackY, 244, 38, selected, downloadTitle,
+                    { { text = "READY", color = cyberInfoUI.pillText }, { text = "ONLINE", color = cyberInfoUI.yellow } },
+                    setting_icon_artwork)
+                hackY = hackY + 44
             end
 
-            if setSwap_X_O_buttons == 1 then 
-                -- Swap buttons is - On
-                Press_Button_to_apply_Category = tostring(lang_lines.Press_O_to_apply_Category)
-            else 
-                -- Swap buttons is - Off
-                Press_Button_to_apply_Category = tostring(lang_lines.Press_X_to_apply_Category)
+            if showOverride then
+                local selected = menuY == 1
+                cyberInfoUI.hackButton(selected and 104 or 90, hackY, 244, 38, selected,
+                    cyberInfoUI.cleanLabel(lang_lines.Override_Category_colon, "Override Category"),
+                    { { text = "READY", color = cyberInfoUI.pillText }, { text = "< " .. string.upper(tostring(tmpcatText)) .. " >", color = cyberInfoUI.yellow } },
+                    setting_icon_categories)
             end
-
-            -- Wrap text for wider languages: German, French, Russian, Portuguese, Dutch, Turkish, Hungarian, Portuguese (Brasil)
-            if setLanguage == 2 or setLanguage == 3 or setLanguage == 6 or setLanguage == 8 or setLanguage == 12 or setLanguage == 16 or setLanguage == 20 or setLanguage == 21 then
-                Font.print(fnt22, 50, 352+40, lang_lines.Override_Category_colon.. "\n< " .. tmpcatText .. " >\n( " .. Press_Button_to_apply_Category .. ")", white)
-            else
-                Font.print(fnt22, 50, 352+50, lang_lines.Override_Category_colon.. "< " .. tmpcatText .. " >\n( " .. Press_Button_to_apply_Category .. ")", white)
-            end
-
-
-        -- All other systems
-        elseif apptype == 39 or apptype == 41 or apptype == 42 then
-            -- dont show anything
-        else
-            if menuY==1 then
-            else
-                if wide_getinfoscreen == true then
-                    Graphics.fillRect(24, 470+24, 350 + (menuY * 40), 390 + (menuY * 40), themeCol)-- selection
-                else
-                    Graphics.fillRect(24, 470, 350 + (menuY * 40), 390 + (menuY * 40), themeCol)-- selection
-                end
-            end
-            -- Font.print(fnt22, 50, 352+3, "< " .. tmpimageText .. " >", white)
         end
 
-        -- Download background - don't show on vita, homebrew or ps mobile or pico8 or sys app
-        if apptype == 0 or apptype == 1 or apptype == 39  or apptype == 41  or apptype == 42 then
-            Font.print(fnt22, 50, 352+3, tmpimageText, white)
+        -- Right: DATA / CONSOLE window, R1 switches tab
+        local panelX, panelY, panelW = 656, 112, 276
+        local bodyTop, bodyBottom = cyberInfoUI.panel(panelX, panelY, panelW, 26, 214, cyberInfoUI.tab, { "DATA", "CONSOLE" })
+        if cyberInfoUI.tab == 0 then
+            cyberInfoUI.dataRows(panelX, bodyTop, infoRows)
+            local statusIconX = panelX + panelW - 16
+            for _, statusIcon in ipairs(infoIcons) do
+                statusIconX = statusIconX - 37
+                Graphics.drawImage(statusIconX, bodyBottom - 42, statusIcon)
+            end
         else
-            Font.print(fnt22, 50, 352+3, "< " .. tmpimageText .. " >", white)
+            cyberInfoUI.consoleView(panelX, bodyTop, panelW, apptype, tmpapptype)
         end
-        
+
+        cyberInfoUI.nameTag(app_title)
+        cyberInfoUI.ramBar()
+        cyberInfoUI.footer()
 
         status = System.getMessageState()
         if status ~= RUNNING then
@@ -17483,6 +17770,13 @@ while true do
 
                 elseif menuY == 1 then
                     OverrideCategory()
+                end
+
+            elseif (Controls.check(pad, SCE_CTRL_RTRIGGER) and not Controls.check(oldpad, SCE_CTRL_RTRIGGER))
+                or (Controls.check(pad, SCE_CTRL_LTRIGGER) and not Controls.check(oldpad, SCE_CTRL_LTRIGGER)) then
+                cyberInfoUI.tab = 1 - cyberInfoUI.tab
+                if setSounds == 1 then
+                    Sound.play(click, NO_LOOP)
                 end
 
             elseif (Controls.check(pad, SCE_CTRL_UP)) and not (Controls.check(oldpad, SCE_CTRL_UP)) then
