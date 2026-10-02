@@ -3265,7 +3265,7 @@ local themeColor = 9 -- 0 blue, 1 red, 2 yellow, 3 green, 4 grey, 5 black, 6 pur
 local cyberpunkThemes = {
     [0] = { name = "Classic" },
     [1] = { name = "Arasaka", folder = "ARASAKA", accent = { 220, 28, 46 }, text = { 255, 220, 218 } },
-    [2] = { name = "Afterlife", folder = "AFTERLIFE", accent = { 169, 48, 236 }, text = { 89, 240, 255 } },
+    [2] = { name = "Dogtown", folder = "DOGTOWN", accent = { 0, 255, 200 }, text = { 255, 140, 50 } },
     [3] = { name = "Night City", folder = "NIGHT_CITY", accent = { 0, 190, 220 }, text = { 255, 207, 82 } },
     [4] = { name = "Arasaka Tower", folder = "ARASAKA_TOWER", accent = { 197, 24, 44 }, text = { 255, 232, 224 } },
     [5] = { name = "Ending", folder = "ENDING", accent = { 241, 174, 48 }, text = { 42, 224, 232 } },
@@ -4201,11 +4201,16 @@ function SetThemeColor()
 end
 SetThemeColor()
 
+-- Header clock, battery, footer labels and game names are always blue
+uiBlue = Color.new(86, 228, 255, 230)
+
 function ApplyCyberpunkThemeColors()
     local selectedTheme = cyberpunkThemes[selectedCyberpunkTheme]
     if selectedTheme ~= nil and selectedTheme.accent ~= nil then
-        themeCol = Color.new(selectedTheme.accent[1], selectedTheme.accent[2], selectedTheme.accent[3], 128)
-        white = Color.new(selectedTheme.text[1], selectedTheme.text[2], selectedTheme.text[3])
+        -- every Cyberpunk theme uses the Arasaka bar and font colours
+        local colours = cyberpunkThemes[1]
+        themeCol = Color.new(colours.accent[1], colours.accent[2], colours.accent[3], 128)
+        white = Color.new(colours.text[1], colours.text[2], colours.text[3])
     end
 end
 ApplyCyberpunkThemeColors()
@@ -15130,13 +15135,9 @@ function drawCategory (def)
             -- Draw list of games
             x = x_listview
             if l >= p and y < 496 then
-                if p == l then
-                    color = white
-                    x = x_listview
-                else
-                    color = white
-                end
-                
+                color = uiBlue
+                x = x_listview
+
                 -- Trim long game names and add "..."
                     apptitle_len = string.len (file.apptitle)
                     apptitle_len_max = 45
@@ -15472,6 +15473,7 @@ local settingsWheelEntries = {
     { label = "Scan_Settings", fallback = "SCAN SETTINGS", icon = "setting_icon_scanning", x = 400, y = 254, w = 157, h = 42 },
     { label = "Other_Settings", fallback = "OTHER SETTINGS", icon = "setting_icon_other", x = 728, y = 425, w = 208, h = 31 },
     { label = "Language_colon", fallback = "LANGUAGE", icon = "setting_icon_language", x = 131, y = 425, w = 210, h = 31 },
+    { fallback = "CYBERPUNK THEMES", x = 416, y = 62, w = 128, h = 152, card = true },
 }
 
 local settingsWheelTouchDown = false
@@ -15660,7 +15662,7 @@ function settingsWheelUI.clock()
     PrintCentered(ui.labelFont(), x + w / 2, y + math.floor((h - 20) / 2) - 2, text, ui.timeText, 16)
 end
 
--- Key cap used for every footer control hint; same outline box as the R1 tab hint on the info screen
+-- Round button icon used for every footer control hint (R1 keeps its rectangular tab shape)
 function settingsWheelUI.keyIcon(x, y, symbol)
     local ui = settingsWheelUI
     if ui.keyLine == nil then
@@ -15671,16 +15673,28 @@ function settingsWheelUI.keyIcon(x, y, symbol)
             local angle = i * math.pi / 8
             ui.circlePoints[i] = { math.floor(math.cos(angle) * 4.5 + 0.5), math.floor(math.sin(angle) * 4.5 + 0.5) }
         end
+        ui.ringPoints = {}
+        for i = 0, 23 do
+            local angle = i * math.pi / 12
+            ui.ringPoints[i] = { math.floor(math.cos(angle) * 9.5 + 0.5), math.floor(math.sin(angle) * 9.5 + 0.5) }
+        end
+        ui.ringHalf = {}
+        for dy = -9, 9 do
+            ui.ringHalf[dy] = math.floor(math.sqrt(81 - dy * dy) + 0.5)
+        end
     end
     local line = ui.keyLine
-    local bx, by = x - 2, y + 2
-    drawFillRect(bx, bx + 24, by, by + 15, ui.keyBody)
-    drawHudLine(bx, bx + 24, by, by, line)
-    drawHudLine(bx, bx + 24, by + 15, by + 15, line)
-    drawHudLine(bx, bx, by, by + 15, line)
-    drawHudLine(bx + 24, bx + 24, by, by + 15, line)
+    local cx, cy = x + 10, y + 10
+    for dy = -9, 9 do
+        local half = ui.ringHalf[dy]
+        drawFillRect(cx - half, cx + half, cy + dy, cy + dy + 1, ui.keyBody)
+    end
+    for i = 0, 23 do
+        local p1 = ui.ringPoints[i]
+        local p2 = ui.ringPoints[(i + 1) % 24]
+        drawHudLine(cx + p1[1], cx + p2[1], cy + p1[2], cy + p2[2], line)
+    end
 
-    local cx, cy = bx + 12, by + 8
     if symbol == "cross" then
         for shift = 0, 1 do
             drawHudLine(cx - 4 + shift, cx + 4 + shift, cy - 4, cy + 4, line)
@@ -15707,6 +15721,56 @@ function settingsWheelUI.keyIcon(x, y, symbol)
         drawHudLine(cx + 4, cx + 4, cy - 4, cy + 4, line)
         drawHudLine(cx - 3, cx + 3, cy - 3, cy - 3, line)
         drawHudLine(cx - 3, cx + 3, cy + 3, cy + 3, line)
+    end
+end
+
+-- Wifi and battery glyphs in the key icon style (same cyan strokes, no circle)
+function settingsWheelUI.iconInit()
+    local ui = settingsWheelUI
+    if ui.iconLine == nil then
+        ui.iconLine = Color.new(84, 220, 244, 245)
+        ui.wifiArcs = {}
+        for arc, radius in ipairs({ 6, 11, 16 }) do
+            local points = {}
+            for i = 0, 6 do
+                local angle = math.rad(-135 + i * 15)
+                points[i] = { math.floor(math.cos(angle) * radius + 0.5), math.floor(math.sin(angle) * radius + 0.5) }
+            end
+            ui.wifiArcs[arc] = points
+        end
+    end
+    return ui.iconLine
+end
+
+function settingsWheelUI.wifiIcon(x, y)
+    local line = settingsWheelUI.iconInit()
+    local cx, cy = x + 11, y + 19
+    for _, points in ipairs(settingsWheelUI.wifiArcs) do
+        for i = 0, 5 do
+            local p1, p2 = points[i], points[i + 1]
+            drawHudLine(cx + p1[1], cx + p2[1], cy + p1[2], cy + p2[2], line)
+            drawHudLine(cx + p1[1] + 1, cx + p2[1] + 1, cy + p1[2], cy + p2[2], line)
+            drawHudLine(cx + p1[1], cx + p2[1], cy + p1[2] + 1, cy + p2[2] + 1, line)
+        end
+    end
+    drawFillRect(cx - 1, cx + 3, cy - 2, cy + 2, line)
+end
+
+function settingsWheelUI.batteryIcon(x, y, percent, charging)
+    local line = settingsWheelUI.iconInit()
+    drawFillRect(x, x + 25, y + 1, y + 3, line)
+    drawFillRect(x, x + 25, y + 13, y + 15, line)
+    drawFillRect(x, x + 2, y + 1, y + 15, line)
+    drawFillRect(x + 23, x + 25, y + 1, y + 15, line)
+    drawFillRect(x + 25, x + 28, y + 5, y + 11, line)
+    if charging then
+        for shift = 0, 1 do
+            drawHudLine(x + 15 + shift, x + 10 + shift, y + 4, y + 8, line)
+            drawHudLine(x + 10 + shift, x + 16 + shift, y + 8, y + 8, line)
+            drawHudLine(x + 16 + shift, x + 11 + shift, y + 8, y + 12, line)
+        end
+    else
+        drawFillRect(x + 3, x + 3 + math.floor(percent / 5.2), y + 4, y + 12, line)
     end
 end
 
@@ -16099,6 +16163,8 @@ local cyberMenuUI = {
     cyan = Color.new(92, 228, 244, 240),
     cyanDim = Color.new(92, 228, 244, 110),
     selectedBody = Color.new(8, 30, 44, 225),
+    bodyText = Color.new(206, 234, 244, 255),
+    rowOffset = 0,
 }
 
 function cyberMenuUI.shift(y)
@@ -16109,33 +16175,8 @@ function cyberMenuUI.rowY(row)
     return cyberMenuUI.rowTop + row * cyberMenuUI.rowPitch
 end
 
-function cyberMenuUI.panel(title)
+function cyberMenuUI.drawLogo()
     local ui = cyberMenuUI
-    settingsWheelUI.background()
-
-    if ui.strips == nil then
-        ui.strips = {}
-        for strip = 0, 67 do
-            local edge = math.abs(strip / 67 - 0.5) * 2
-            ui.strips[strip] = Color.new(88, 12, 24, math.floor(122 + 40 * edge))
-        end
-        ui.edge = Color.new(214, 54, 66, 235)
-        ui.edgeDim = Color.new(214, 54, 66, 120)
-        ui.scan = Color.new(255, 90, 90, 22)
-    end
-
-    for strip = 0, 67 do
-        local y = strip * 8
-        local x1 = ui.panelLeft
-        local x2 = ui.panelRight
-        drawFillRect(x1, x2, y, y + 8, ui.strips[strip])
-        drawFillRect(x1, x1 + 2, y, y + 8, ui.edge)
-        drawFillRect(x2 - 1, x2, y, y + 8, ui.edgeDim)
-    end
-    for y = 6, 540, 12 do
-        drawHudLine(ui.panelLeft + 3, ui.panelRight - 2, y, y, ui.scan)
-    end
-
     if ui.logo == nil and ui.logoFailed == false then
         local loaded, image = pcall(Graphics.loadImage, "app0:/DATA/logo_cyberflow.png")
         if loaded then
@@ -16145,8 +16186,48 @@ function cyberMenuUI.panel(title)
         end
     end
     if ui.logo ~= nil then
-        Graphics.drawImage(ui.panelLeft + math.floor((ui.panelRight - ui.panelLeft - Graphics.getImageWidth(ui.logo)) / 2), 8, ui.logo)
+        Graphics.drawImage(480 - math.floor(Graphics.getImageWidth(ui.logo) / 2), 8, ui.logo)
     end
+end
+
+function cyberMenuUI.panel(title)
+    local ui = cyberMenuUI
+    settingsWheelUI.background()
+
+    if ui.strips == nil then
+        -- the panel fades out over its first and last 80px so it melts into the background
+        local function fadeAt(y)
+            return math.max(0, math.min(1, math.min(y, 544 - y) / 80))
+        end
+        ui.strips = {}
+        ui.stripEdge = {}
+        ui.stripEdgeDim = {}
+        for strip = 0, 67 do
+            local edge = math.abs(strip / 67 - 0.5) * 2
+            local fade = fadeAt(strip * 8 + 4)
+            ui.strips[strip] = Color.new(88, 12, 24, math.floor((122 + 40 * edge) * fade))
+            ui.stripEdge[strip] = Color.new(214, 54, 66, math.floor(235 * fade))
+            ui.stripEdgeDim[strip] = Color.new(214, 54, 66, math.floor(120 * fade))
+        end
+        ui.scanLines = {}
+        for y = 6, 540, 12 do
+            ui.scanLines[y] = Color.new(255, 90, 90, math.floor(22 * fadeAt(y)))
+        end
+    end
+
+    for strip = 0, 67 do
+        local y = strip * 8
+        local x1 = ui.panelLeft
+        local x2 = ui.panelRight
+        drawFillRect(x1, x2, y, y + 8, ui.strips[strip])
+        drawFillRect(x1, x1 + 2, y, y + 8, ui.stripEdge[strip])
+        drawFillRect(x2 - 1, x2, y, y + 8, ui.stripEdgeDim[strip])
+    end
+    for y = 6, 540, 12 do
+        drawHudLine(ui.panelLeft + 3, ui.panelRight - 2, y, y, ui.scanLines[y])
+    end
+
+    ui.drawLogo()
 
     local titleFont = cyberInfoUI.font(16)
     Font.print(titleFont, ui.textX, 116, cyberInfoUI.cleanLabel(title, ""), ui.cyan)
@@ -16155,7 +16236,7 @@ end
 
 function cyberMenuUI.selection()
     local ui = cyberMenuUI
-    local y = ui.rowY(menuY) - 7
+    local y = ui.rowY(menuY + ui.rowOffset) - 7
     local x = ui.panelLeft + 10
     local w = ui.panelRight - ui.panelLeft - 20
     local h = 33
@@ -16170,21 +16251,37 @@ function cyberMenuUI.selection()
     drawFillRect(x + w - 30, x + w - 22, y + 21, y + 23, ui.cyan)
 end
 
-function cyberMenuUI.footer()
+-- entries are listed right to left: { text = label, icon = btnO/btnX/btnT/btnS }
+function cyberMenuUI.footer(entries)
     local ui = cyberMenuUI
-    local closeWidth = Font.getTextWidth(fnt20, lang_lines.Close)
-    local selectWidth = Font.getTextWidth(fnt20, lang_lines.Select)
-
-    Graphics.drawImage(900 - closeWidth, 510, btnO)
-    Font.print(fnt20, 900 + 28 - closeWidth, 508, lang_lines.Close, ui.cyan)
-    Graphics.drawImage(900 - (btnMargin * 2) - closeWidth - selectWidth, 510, btnX)
-    Font.print(fnt20, 900 + 28 - (btnMargin * 2) - closeWidth - selectWidth, 508, lang_lines.Select, ui.cyan)
+    entries = entries or {
+        { text = lang_lines.Close, icon = btnO },
+        { text = lang_lines.Select, icon = btnX },
+    }
+    local cursor = 928
+    for _, entry in ipairs(entries) do
+        local textX = cursor - Font.getTextWidth(fnt20, entry.text)
+        Font.print(fnt20, textX, 508, entry.text, ui.cyan)
+        Graphics.drawImage(textX - 28, 510, entry.icon)
+        cursor = textX - 50
+    end
 end
 
 function cyberMenuUI.print(font, x, y, text, color)
     local ui = cyberMenuUI
+    if type(text) == "string" then
+        local value = text:match("^<%s+(.-)%s+>$")
+        if value ~= nil then
+            local width = ui.controlW
+            if x ~= ui.valueX then
+                width = ui.panelRight - 28 - x
+            end
+            settingsWheelUI.slider(x, y, value, width)
+            return
+        end
+    end
     if color == white then
-        if y == ui.selectedY then
+        if math.abs(y - ui.selectedY) <= 3 then
             color = ui.selectedText
         else
             color = ui.itemText
@@ -16193,28 +16290,39 @@ function cyberMenuUI.print(font, x, y, text, color)
     return ui.saved.print(font, x, y, text, color)
 end
 
-function cyberMenuUI.begin(title)
+-- opts.footer: footer entries, opts.rowOffset: selected row = menuY + rowOffset
+function cyberMenuUI.begin(title, opts)
     local ui = cyberMenuUI
     ui.restore()
+    opts = opts or {}
+    ui.rowOffset = opts.rowOffset or 0
     ui.panel(title)
     ui.selection()
-    ui.footer()
+    ui.footer(opts.footer)
 
     ui.saved = {
         print = Font.print,
         fnt22 = fnt22,
         settingX = setting_x,
         settingXOffset = setting_x_offset,
+        settingXIcon = setting_x_icon,
+        settingXIconOffset = setting_x_icon_offset,
+        settingYh = setting_yh,
+        textOffset = y_centre_text_offset,
         rows = {},
     }
     for row = 0, 8 do
         ui.saved.rows[row] = _G["setting_y" .. row]
         _G["setting_y" .. row] = ui.rowY(row)
     end
-    ui.selectedY = ui.rowY(menuY)
+    ui.selectedY = ui.rowY(menuY + ui.rowOffset)
     fnt22 = cyberInfoUI.font(18)
     setting_x = ui.textX
     setting_x_offset = ui.valueX
+    setting_x_icon = ui.textX
+    setting_x_icon_offset = ui.textX + 40
+    setting_yh = -100
+    y_centre_text_offset = 0
     Font.print = ui.print
 end
 
@@ -16227,10 +16335,154 @@ function cyberMenuUI.restore()
     fnt22 = ui.saved.fnt22
     setting_x = ui.saved.settingX
     setting_x_offset = ui.saved.settingXOffset
+    setting_x_icon = ui.saved.settingXIcon
+    setting_x_icon_offset = ui.saved.settingXIconOffset
+    setting_yh = ui.saved.settingYh
+    y_centre_text_offset = ui.saved.textOffset
     for row = 0, 8 do
         _G["setting_y" .. row] = ui.saved.rows[row]
     end
     ui.saved = nil
+    ui.rowOffset = 0
+end
+
+cyberMenuUI.fx = { last = 0, kind = 0, t = 999, seed = 1 }
+
+function cyberMenuUI.fxStep(menu)
+    local fx = cyberMenuUI.fx
+    if menu ~= fx.last then
+        if fx.last == 0 then
+            fx.kind = 1
+        elseif menu == 0 then
+            fx.kind = 2
+        else
+            fx.kind = 3
+        end
+        fx.last = menu
+        fx.t = 0
+        fx.seed = (fx.seed * 7 + 13) % 997
+    end
+end
+
+-- Cyberpunk 2077 style transitions: 1 = open (shutter + scan line), 2 = close (sweep wipe), 3 = menu switch (glitch burst)
+function cyberMenuUI.fxDraw()
+    local fx = cyberMenuUI.fx
+    local kind = fx.kind
+    local dur = 12
+    if kind == 1 then
+        dur = 22
+    elseif kind == 2 then
+        dur = 18
+    end
+    if fx.t >= dur then
+        return
+    end
+    local p = fx.t / dur
+    local seed = fx.seed * 131 + fx.t * 977
+    local function rnd(n)
+        return ((seed + n * 7919) * 31 % 1000) / 1000
+    end
+    fx.t = fx.t + 1
+
+    local fill = drawFillRect
+    local r, g, b = Color.getR(themeCol), Color.getG(themeCol), Color.getB(themeCol)
+    local fadeOut = 1 - p
+    local function acc(a) return Color.new(r, g, b, math.max(0, math.min(255, math.floor(a)))) end
+    local function yel(a) return Color.new(252, 238, 10, math.max(0, math.min(255, math.floor(a)))) end
+    local function red(a) return Color.new(255, 60, 80, math.max(0, math.min(255, math.floor(a)))) end
+    local function glitchColour(n, a)
+        local c = rnd(n + 50)
+        if c < 0.5 then
+            return acc(a)
+        elseif c < 0.8 then
+            return yel(a)
+        end
+        return red(a)
+    end
+
+    if kind == 1 then
+        local e = 1 - fadeOut * fadeOut * fadeOut
+        local gap = math.floor(272 * e)
+        local top = 272 - gap
+        local bottom = 272 + gap
+        local panelAlpha = 238 * (1 - p * p * p)
+        local panel = Color.new(3, 7, 13, math.floor(panelAlpha))
+        if top > 0 then
+            fill(0, 960, 0, top, panel)
+            fill(0, 960, bottom, 544, panel)
+            for line = 1, 10 do
+                local ly = top - line * 9
+                if ly > 0 then
+                    fill(0, 960, ly, ly + 1, acc(26 * (1 - line / 11)))
+                end
+                local lb = bottom + line * 9
+                if lb < 544 then
+                    fill(0, 960, lb, lb + 1, acc(26 * (1 - line / 11)))
+                end
+            end
+            for n = 1, 5 do
+                local gx = math.floor(rnd(n) * 700)
+                local gw = 60 + math.floor(rnd(n + 10) * 240)
+                local gh = 2 + math.floor(rnd(n + 20) * 6)
+                local off = math.floor(rnd(n + 30) * 70)
+                local c = glitchColour(n, 170 * fadeOut)
+                fill(gx, gx + gw, math.max(0, top - off - gh), math.max(0, top - off), c)
+                fill(960 - gx - gw, 960 - gx, math.min(544, bottom + off), math.min(544, bottom + off + gh), c)
+            end
+        end
+        local glow = acc(60 * fadeOut + 20)
+        fill(0, 960, top - 7, top - 1, glow)
+        fill(0, 960, bottom + 1, bottom + 7, glow)
+        fill(0, 960, top - 1, top + 1, acc(255))
+        fill(0, 960, bottom - 1, bottom + 1, acc(255))
+        if p < 0.3 then
+            local cx = 480 - math.floor(300 * (1 - p / 0.3))
+            fill(cx, 960 - cx, 270, 274, yel(255 * (1 - p / 0.3)))
+        end
+        local tick = math.min(24, gap)
+        fill(24, 26, bottom - tick, bottom, acc(220 * fadeOut))
+        fill(934, 936, bottom - tick, bottom, acc(220 * fadeOut))
+        fill(24, 26, top, top + tick, acc(220 * fadeOut))
+        fill(934, 936, top, top + tick, acc(220 * fadeOut))
+    elseif kind == 2 then
+        local e = 1 - fadeOut * fadeOut
+        local sx = math.floor(960 * e)
+        local cover = Color.new(3, 7, 13, math.floor(236 * (1 - p * p)))
+        if sx < 960 then
+            fill(sx, 960, 0, 544, cover)
+            for n = 1, 6 do
+                local gy = math.floor(rnd(n) * 520)
+                local gh = 3 + math.floor(rnd(n + 10) * 12)
+                local gw = 80 + math.floor(rnd(n + 20) * 300)
+                fill(sx, math.min(960, sx + gw), gy, gy + gh, glitchColour(n, 110 * fadeOut + 30))
+            end
+        end
+        for n = 1, 5 do
+            local gy = math.floor(rnd(n + 70) * 520)
+            local gh = 2 + math.floor(rnd(n + 80) * 10)
+            local gw = 40 + math.floor(rnd(n + 90) * 160)
+            fill(math.max(0, sx - gw), sx, gy, gy + gh, glitchColour(n + 5, 150 * fadeOut))
+        end
+        for k = 1, 8 do
+            fill(math.max(0, sx - k * 5), sx - (k - 1) * 5, 0, 544, acc(55 * (1 - k / 9) * (fadeOut + 0.3)))
+        end
+        fill(sx - 1, sx + 2, 0, 544, acc(255 * (0.4 + fadeOut * 0.6)))
+        fill(sx + 3, sx + 4, 0, 544, yel(200 * fadeOut))
+        fill(0, 960, 495, 496, acc(150 * fadeOut))
+    else
+        local flash = fadeOut * fadeOut
+        fill(0, 960, 0, 544, Color.new(3, 7, 13, math.floor(150 * flash)))
+        for n = 1, 7 do
+            local gy = math.floor(rnd(n) * 530)
+            local gh = 2 + math.floor(rnd(n + 10) * 14)
+            local gx = math.floor(rnd(n + 20) * 300)
+            local gw = 200 + math.floor(rnd(n + 30) * 460)
+            fill(gx, math.min(960, gx + gw), gy, gy + gh, glitchColour(n, 140 * flash))
+        end
+        local sx = math.floor(960 * p)
+        fill(sx, sx + 2, 0, 544, acc(220 * flash))
+        fill(math.max(0, sx - 10), sx, 0, 544, acc(40 * flash))
+    end
 end
 
 function cyberMenuUI.sidePress(rows)
@@ -16284,9 +16536,9 @@ function settingsWheelUI.toggle(x, y, state)
 end
 
 -- < value > selector box
-function settingsWheelUI.slider(x, y, value)
+function settingsWheelUI.slider(x, y, value, width)
     local ui = cyberMenuUI
-    local w, h = ui.controlW, 26
+    local w, h = width or ui.controlW, 26
     local boxY = y - 2
     local font = cyberInfoUI.font(16)
     local textColor = ui.controlBox(x, boxY, w, h, false)
@@ -16294,6 +16546,404 @@ function settingsWheelUI.slider(x, y, value)
     Font.print(font, x + math.floor((w - Font.getTextWidth(font, text)) / 2), boxY + 5, text, ui.cyan)
     Font.print(font, x + 12, boxY + 5, "<", ui.cyan)
     Font.print(font, x + w - 12 - Font.getTextWidth(font, ">"), boxY + 5, ">", ui.cyan)
+end
+
+-- Dedicated Cyberpunk theme picker (radio menu layout): list on the right, logo box on the left.
+cyberMenuUI.themeScroll = 0
+cyberMenuUI.themeRows = 7
+cyberMenuUI.themeRowH = 34
+cyberMenuUI.palettes = {}
+
+function cyberMenuUI.palette(index)
+    local ui = cyberMenuUI
+    local pal = ui.palettes[index]
+    if pal == nil then
+        local theme = cyberpunkThemes[index]
+        local a = theme.accent or { 92, 228, 244 }
+        local t = theme.text or { 232, 240, 244 }
+        pal = {
+            accent = Color.new(a[1], a[2], a[3], 255),
+            dim = Color.new(a[1], a[2], a[3], 110),
+            text = Color.new(t[1], t[2], t[3], 255),
+            dark = Color.new(10, 12, 18, 255),
+        }
+        ui.palettes[index] = pal
+    end
+    return pal
+end
+
+function cyberMenuUI.disc(cx, cy, r, color)
+    for dy = -r, r do
+        local w = math.floor(math.sqrt(r * r - dy * dy))
+        drawFillRect(cx - w, cx + w, cy + dy, cy + dy + 1, color)
+    end
+end
+
+function cyberMenuUI.ring(cx, cy, r, color, dashed)
+    local steps = math.max(16, math.floor(r * 0.9))
+    local px, py = cx + r, cy
+    for i = 1, steps do
+        local ang = i * 2 * math.pi / steps
+        local x = cx + math.floor(r * math.cos(ang) + 0.5)
+        local y = cy + math.floor(r * math.sin(ang) + 0.5)
+        if dashed ~= true or i % 2 == 0 then
+            drawHudLine(px, x, py, y, color)
+        end
+        px, py = x, y
+    end
+end
+
+function cyberMenuUI.thick(x1, x2, y1, y2, color, n)
+    x1, x2, y1, y2 = math.floor(x1 + 0.5), math.floor(x2 + 0.5), math.floor(y1 + 0.5), math.floor(y2 + 0.5)
+    n = n or 3
+    local first = -math.floor(n / 2)
+    for o = first, first + n - 1 do
+        if math.abs(x2 - x1) >= math.abs(y2 - y1) then
+            drawHudLine(x1, x2, y1 + o, y2 + o, color)
+        else
+            drawHudLine(x1 + o, x2 + o, y1, y2, color)
+        end
+    end
+end
+
+function cyberMenuUI.hexVertex(cx, cy, r, k)
+    local ang = k * math.pi / 3
+    return cx + math.floor(r * math.cos(ang) + 0.5), cy + math.floor(r * math.sin(ang) + 0.5)
+end
+
+function cyberMenuUI.centerText(font, cx, y, text, color)
+    Font.print(font, cx - math.floor(Font.getTextWidth(font, text) / 2), y, text, color)
+end
+
+-- Draws the logo for a theme, centred on cx, cy (fits roughly 110 x 150 pixels)
+function cyberMenuUI.themeLogo(index, cx, cy)
+    local ui = cyberMenuUI
+    local pal = ui.palette(index)
+    local a, d, t, k = pal.accent, pal.dim, pal.text, pal.dark
+    local thick, disc, ring = ui.thick, ui.disc, ui.ring
+    local big, small = cyberInfoUI.font(28), cyberInfoUI.font(12)
+
+    if index == 1 then -- Arasaka: red sun with a blade mark
+        disc(cx, cy, 46, a)
+        drawFillRect(cx - 3, cx + 4, cy - 38, cy + 38, k)
+        thick(cx - 34, cx - 6, cy - 20, cy + 12, k, 5)
+        thick(cx + 34, cx + 6, cy - 20, cy + 12, k, 5)
+        drawFillRect(cx - 28, cx + 29, cy - 28, cy - 23, k)
+        thick(cx - 26, cx - 8, cy + 26, cy + 16, k, 4)
+        thick(cx + 26, cx + 8, cy + 26, cy + 16, k, 4)
+        ring(cx, cy, 52, d)
+    elseif index == 2 then -- Dogtown: geometric pyramid neon structure
+        local py = cy + 5
+        local px = cx
+        drawHudLine(px - 45, px + 45, py + 40, py + 40, a)
+        drawHudLine(px - 40, px - 45, py + 40, py + 30, a)
+        drawHudLine(px + 40, px + 45, py + 40, py + 30, a)
+        drawHudLine(px - 30, px + 30, py + 30, py + 30, k)
+        drawHudLine(px - 35, px - 30, py + 30, py + 20, k)
+        drawHudLine(px + 30, px + 35, py + 30, py + 20, k)
+        drawHudLine(px - 20, px + 20, py + 20, py + 20, a)
+        drawHudLine(px - 25, px - 20, py + 20, py + 10, a)
+        drawHudLine(px + 20, px + 25, py + 20, py + 10, a)
+        drawHudLine(px - 10, px + 10, py + 10, py + 10, k)
+        drawHudLine(px - 10, px + 10, py - 5, py + 10, a)
+        ring(cx, cy, 54, d)
+    elseif index == 3 then -- Night City: skyline against the sun
+        local base = cy + 40
+        disc(cx, cy + 6, 30, t)
+        local towers = { { -56, 14, 34 }, { -42, 12, 54 }, { -30, 16, 28 }, { -14, 12, 66 }, { -2, 18, 44 }, { 16, 12, 58 }, { 28, 14, 36 }, { 42, 14, 48 } }
+        for _, v in ipairs(towers) do
+            local x1 = cx + v[1]
+            local x2 = x1 + v[2]
+            local top = base - v[3]
+            drawFillRect(x1, x2, top, base, k)
+            drawHudLine(x1, x2, top, top, a)
+            drawHudLine(x1, x1, top, base, a)
+            drawHudLine(x2, x2, top, base, a)
+            for wy = top + 6, base - 6, 9 do
+                drawFillRect(x1 + 3, x1 + 5, wy, wy + 2, t)
+            end
+        end
+        drawHudLine(cx - 8, cx - 8, base - 66, base - 80, a)
+        drawHudLine(cx - 62, cx + 62, base, base, a)
+    elseif index == 4 then -- Arasaka Tower
+        local levels = { { 6, -60, -42 }, { 14, -42, -20 }, { 24, -20, 6 }, { 38, 6, 40 } }
+        for _, v in ipairs(levels) do
+            drawFillRect(cx - v[1], cx + v[1], cy + v[2], cy + v[3], k)
+            drawHudLine(cx - v[1], cx + v[1], cy + v[2], cy + v[2], a)
+            drawHudLine(cx - v[1], cx - v[1], cy + v[2], cy + v[3], a)
+            drawHudLine(cx + v[1], cx + v[1], cy + v[2], cy + v[3], a)
+            for wy = cy + v[2] + 5, cy + v[3] - 3, 6 do
+                drawHudLine(cx - v[1] + 3, cx + v[1] - 3, wy, wy, d)
+            end
+        end
+        thick(cx, cx, cy - 60, cy - 80, a, 2)
+        disc(cx, cy - 82, 2, t)
+        drawHudLine(cx - 60, cx + 60, cy + 40, cy + 40, a)
+        drawHudLine(cx - 50, cx + 50, cy + 44, cy + 44, d)
+    elseif index == 5 then -- Ending: sunset over the horizon
+        local hy = cy + 12
+        for dy = -40, 0 do
+            local w = math.floor(math.sqrt(1600 - dy * dy))
+            local gap = dy > -28 and (dy % 7) < 2
+            if gap == false then
+                drawFillRect(cx - w, cx + w, hy + dy, hy + dy + 1, a)
+            end
+        end
+        drawHudLine(cx - 58, cx + 58, hy, hy, t)
+        drawHudLine(cx - 58, cx + 58, hy + 1, hy + 1, t)
+        for i = 1, 4 do
+            local w = 58 - i * 10
+            drawHudLine(cx - w, cx + w, hy + i * 8, hy + i * 8, d)
+        end
+    elseif index == 6 then -- Johnny Silverhand: Samurai blade
+        ring(cx, cy, 46, a)
+        ring(cx, cy, 44, a)
+        ring(cx, cy, 38, d)
+        thick(cx + 30, cx - 12, cy - 30, cy + 12, t, 4)
+        thick(cx - 20, cx - 4, cy + 4, cy + 20, a, 4)
+        thick(cx - 12, cx - 30, cy + 12, cy + 30, a, 5)
+        ui.centerText(small, cx, cy + 52, "SAMURAI", t)
+    elseif index == 7 then -- Main Theme: 2077 hex badge
+        settingsWheelUI.hexagon(cx, cy, 50, a)
+        settingsWheelUI.hexagon(cx, cy, 45, a)
+        ui.centerText(small, cx, cy - 26, "CYBERPUNK", t)
+        ui.centerText(big, cx, cy - 12, "2077", a)
+    elseif index == 8 then -- Mikoshi: nested lattice
+        settingsWheelUI.hexagon(cx, cy, 48, a)
+        settingsWheelUI.hexagon(cx, cy, 47, a)
+        settingsWheelUI.hexagon(cx, cy, 32, a)
+        settingsWheelUI.hexagon(cx, cy, 16, a)
+        for v = 0, 5 do
+            local x1, y1 = ui.hexVertex(cx, cy, 16, v)
+            local x2, y2 = ui.hexVertex(cx, cy, 48, v)
+            drawHudLine(x1, x2, y1, y2, d)
+            disc(x2, y2, 3, t)
+        end
+        disc(cx, cy, 7, t)
+        ring(cx, cy, 11, a)
+    elseif index == 9 then -- Militech: ringed chevrons
+        disc(cx, cy, 46, a)
+        thick(cx - 26, cx, cy - 20, cy - 2, k, 5)
+        thick(cx, cx + 26, cy - 2, cy - 20, k, 5)
+        thick(cx - 26, cx, cy - 4, cy + 14, k, 5)
+        thick(cx, cx + 26, cy + 14, cy - 4, k, 5)
+        drawFillRect(cx - 28, cx + 29, cy + 26, cy + 31, k)
+        ring(cx, cy, 52, d)
+    elseif index == 10 then -- Alt Cunningham: watching eye
+        local px, ptop, pbot
+        for i = -40, 40, 4 do
+            local h = math.floor(24 * (1 - (i / 40) * (i / 40)))
+            if px ~= nil then
+                thick(cx + px, cx + i, cy - ptop, cy - h, a, 2)
+                thick(cx + px, cx + i, cy + pbot, cy + h, a, 2)
+            end
+            px, ptop, pbot = i, h, h
+        end
+        disc(cx, cy, 14, a)
+        disc(cx, cy, 6, k)
+        disc(cx - 4, cy - 4, 2, t)
+        ring(cx, cy, 54, d, true)
+        Font.print(small, cx - 56, cy - 50, "01", t)
+        Font.print(small, cx + 42, cy - 50, "10", t)
+        Font.print(small, cx - 56, cy + 38, "11", t)
+        Font.print(small, cx + 42, cy + 38, "00", t)
+    elseif index == 11 then -- Phantom Liberty: torch crown
+        for step = 0, 6 do
+            local ang = math.pi + step * math.pi / 6
+            local c, s = math.cos(ang), math.sin(ang)
+            thick(cx + c * 30, cx + c * 54, cy + 10 + s * 30, cy + 10 + s * 54, a, 3)
+        end
+        ring(cx, cy + 10, 24, a)
+        ring(cx, cy + 10, 23, a)
+        disc(cx, cy + 10, 12, t)
+        drawFillRect(cx - 10, cx + 11, cy + 34, cy + 42, a)
+        drawFillRect(cx - 26, cx + 27, cy + 42, cy + 48, a)
+    elseif index == 12 then -- Nocturne OP55N1: notes on a staff
+        for line = 0, 4 do
+            drawHudLine(cx - 56, cx + 56, cy - 20 + line * 10, cy - 20 + line * 10, d)
+        end
+        disc(cx - 24, cy + 26, 8, a)
+        disc(cx + 16, cy + 16, 8, a)
+        thick(cx - 17, cx - 17, cy + 24, cy - 34, a, 3)
+        thick(cx + 23, cx + 23, cy + 14, cy - 44, a, 3)
+        thick(cx - 17, cx + 23, cy - 34, cy - 44, a, 6)
+    else -- Classic
+        ring(cx, cy, 44, a)
+        ring(cx, cy, 40, d)
+        drawHudLine(cx - 12, cx + 18, cy - 20, cy, t)
+        drawHudLine(cx + 18, cx - 12, cy, cy + 20, t)
+        drawHudLine(cx - 12, cx - 12, cy + 20, cy - 20, t)
+        for step = 0, 3 do
+            local x1, y1 = ui.hexVertex(cx, cy, 48, step * 1.5)
+            local x2, y2 = ui.hexVertex(cx, cy, 56, step * 1.5)
+            drawHudLine(x1, x2, y1, y2, a)
+        end
+    end
+end
+
+-- Loads the preview photo for a theme (only one stays in memory); nil when missing
+function cyberMenuUI.themeImage(index)
+    local ui = cyberMenuUI
+    local theme = cyberpunkThemes[index]
+    if theme.folder == nil then
+        return nil
+    end
+    if ui.themeImg ~= nil and ui.themeImg.index == index then
+        return ui.themeImg.image
+    end
+    if ui.themeImg ~= nil and ui.themeImg.image ~= nil then
+        Graphics.freeImage(ui.themeImg.image)
+    end
+    local loaded, image = pcall(Graphics.loadImage, "app0:/DATA/theme_previews/" .. theme.folder .. ".png")
+    if loaded == false then
+        image = nil
+    end
+    ui.themeImg = { index = index, image = image }
+    return image
+end
+
+function cyberMenuUI.freeThemeImage()
+    local ui = cyberMenuUI
+    if ui.themeImg ~= nil and ui.themeImg.image ~= nil then
+        Graphics.freeImage(ui.themeImg.image)
+    end
+    ui.themeImg = nil
+end
+
+function cyberMenuUI.drawThemeMenu()
+    local ui = cyberMenuUI
+    if ui.tBody == nil then
+        ui.tBody = Color.new(10, 8, 14, 235)
+        ui.tEdge = Color.new(214, 54, 66, 235)
+        ui.tEdgeDim = Color.new(214, 54, 66, 120)
+        ui.tDot = Color.new(214, 54, 66, 60)
+        ui.tHeader = Color.new(118, 22, 34, 225)
+        ui.tSel = Color.new(92, 228, 244, 255)
+        ui.tSelText = Color.new(6, 22, 30, 255)
+        ui.tCaption = Color.new(4, 6, 10, 200)
+    end
+
+    local count = cyberpunkThemeCount + 1
+    local rows = ui.themeRows
+    local rowH = ui.themeRowH
+    local left, right = 150, 810
+    local bodyY = 156
+
+    if previewCyberpunkTheme < ui.themeScroll then
+        ui.themeScroll = previewCyberpunkTheme
+    elseif previewCyberpunkTheme > ui.themeScroll + rows - 1 then
+        ui.themeScroll = previewCyberpunkTheme - rows + 1
+    end
+    ui.themeScroll = math.max(0, math.min(count - rows, ui.themeScroll))
+
+    settingsWheelUI.background()
+    ui.drawLogo()
+
+    -- header bar
+    settingsWheelUI.chamfer(left, 106, right - left, 32, 0, 10, ui.tHeader)
+    settingsWheelUI.outline(left, 106, right - left, 32, 0, 10, ui.tEdge)
+    drawFillRect(left, left + 4, 106, 128, ui.tEdge)
+    Font.print(cyberInfoUI.font(18), left + 18, 112, cyberInfoUI.cleanLabel(lang_lines.Cyberpunk_Theme_colon, "Cyberpunk Theme"), ui.selectedText)
+    local tag = string.format("%02d / %02d", previewCyberpunkTheme + 1, count)
+    local tagFont = cyberInfoUI.font(12)
+    Font.print(tagFont, right - 24 - Font.getTextWidth(tagFont, tag), 116, tag, ui.cyan)
+
+    -- preview box
+    local boxW, boxH = 238, rows * rowH
+    local pal = ui.palette(previewCyberpunkTheme)
+    local preview = cyberpunkThemes[previewCyberpunkTheme]
+    local image = ui.themeImage(previewCyberpunkTheme)
+    settingsWheelUI.chamfer(left, bodyY, boxW, boxH, 0, 0, ui.tBody)
+    if image ~= nil then
+        Graphics.drawImage(left, bodyY, image)
+        drawFillRect(left, left + boxW, bodyY + boxH - 30, bodyY + boxH, ui.tCaption)
+    else
+        for gy = bodyY + 12, bodyY + boxH - 16, 22 do
+            for gx = left + 16, left + boxW - 14, 22 do
+                drawFillRect(gx, gx + 1, gy, gy + 1, ui.tDot)
+            end
+        end
+        ui.themeLogo(previewCyberpunkTheme, left + math.floor(boxW / 2), bodyY + 100)
+    end
+    settingsWheelUI.outline(left, bodyY, boxW, boxH, 0, 0, ui.tEdgeDim)
+    drawFillRect(left, left + 3, bodyY, bodyY + boxH, ui.tEdge)
+    local captionFont = cyberInfoUI.font(13)
+    local caption = cyberInfoUI.fit(captionFont, string.upper(preview.name), boxW - 24)
+    ui.centerText(captionFont, left + math.floor(boxW / 2), bodyY + boxH - 23, caption, image ~= nil and ui.selectedText or pal.text)
+
+    -- theme list
+    local listX = left + 254
+    local listW = right - listX - 24
+    local font = cyberInfoUI.font(18)
+    local activeFont = cyberInfoUI.font(12)
+    for row = 0, rows - 1 do
+        local index = ui.themeScroll + row
+        if index < count then
+            local ry = bodyY + row * rowH
+            local selected = (index == previewCyberpunkTheme)
+            local name = cyberInfoUI.fit(font, string.upper(cyberpunkThemes[index].name), index == selectedCyberpunkTheme and listW - 110 or listW - 56)
+            if selected then
+                settingsWheelUI.chamfer(listX, ry, listW, rowH - 2, 0, 10, ui.tSel)
+            end
+            local glyph = selected and ui.tSelText or ui.tEdgeDim
+            drawFillRect(listX + 8, listX + 18, ry + 11, ry + 13, glyph)
+            drawFillRect(listX + 8, listX + 18, ry + 16, ry + 18, glyph)
+            drawFillRect(listX + 8, listX + 14, ry + 21, ry + 23, glyph)
+            Font.print(font, listX + 32, ry + 6, name, selected and ui.tSelText or ui.itemText)
+            if index == selectedCyberpunkTheme then
+                local label = "ACTIVE"
+                Font.print(activeFont, listX + listW - 22 - Font.getTextWidth(activeFont, label), ry + 10, label, selected and ui.tSelText or ui.cyan)
+            end
+        end
+    end
+
+    -- scroll bar
+    local trackX = right - 10
+    drawFillRect(trackX, trackX + 3, bodyY, bodyY + boxH, ui.tDot)
+    local thumbH = math.floor(boxH * rows / count)
+    local thumbY = bodyY + math.floor((boxH - thumbH) * ui.themeScroll / math.max(1, count - rows))
+    drawFillRect(trackX, trackX + 3, thumbY, thumbY + thumbH, ui.tEdge)
+
+    drawHudLine(left, right, 456, 456, ui.tEdgeDim)
+    ui.footer({
+        { text = lang_lines.Close, icon = btnO },
+        { text = lang_lines.Select, icon = btnX },
+    })
+end
+
+-- Settings wheel card (Arasaka mask style) that opens the Cyberpunk theme picker
+function cyberMenuUI.themeCard(entry, selected, label)
+    local ui = cyberMenuUI
+    if ui.cardBody == nil then
+        ui.cardBody = Color.new(34, 6, 14, 215)
+        ui.cardBodyOn = Color.new(52, 10, 22, 235)
+        ui.cardHead = Color.new(8, 16, 38, 235)
+        ui.cardRed = Color.new(188, 38, 56, 235)
+        ui.cardRedDim = Color.new(188, 38, 56, 120)
+    end
+    local x, y, w, h = entry.x, entry.y, entry.w, entry.h
+    local line = selected and settingsWheelUI.cyan or ui.cardRed
+
+    settingsWheelUI.chamfer(x, y, w, h, 8, 12, selected and ui.cardBodyOn or ui.cardBody)
+    drawFillRect(x + 8, x + w, y, y + 14, ui.cardHead)
+    for i = 0, 6 do
+        drawFillRect(x + 14 + i * 12, x + 22 + i * 12, y + 6, y + 8, ui.cardRedDim)
+    end
+    local image = ui.themeImage(selectedCyberpunkTheme)
+    if image ~= nil then
+        local size = w - 8
+        Graphics.drawScaleImage(x + 4, y + 17, image, size / 238, size / 238)
+    else
+        ui.themeLogo(1, x + math.floor(w / 2), y + 14 + math.floor((h - 14) / 2))
+    end
+
+    settingsWheelUI.outline(x, y, w, h, 8, 12, line)
+    settingsWheelUI.outline(x + 1, y + 1, w - 2, h - 2, 7, 11, line)
+    drawHudLine(x + 6, x + w - 6, y + 14, y + 14, ui.cardRedDim)
+    drawFillRect(x + w - 12, x + w - 4, y + h - 8, y + h - 6, ui.cardRedDim)
+    drawFillRect(x + 4, x + 12, y + h - 8, y + h - 6, ui.cardRedDim)
+
+    PrintCentered(settingsWheelUI.labelFont(), x + w / 2, y + h + 3, label, selected and settingsWheelUI.textOn or settingsWheelUI.text, 16)
 end
 
 local function activate_settings_wheel_option(option)
@@ -16328,6 +16978,10 @@ local function activate_settings_wheel_option(option)
             chooseLanguage = 0
         end
         ChangeLanguage(xsetLanguageLookup(chooseLanguage))
+    elseif option == 8 then
+        previewCyberpunkTheme = selectedCyberpunkTheme
+        showMenu = 31
+        menuY = 0
     end
     SaveSettings()
 end
@@ -17053,6 +17707,8 @@ while true do
     Graphics.fillRect(0, 960, 496, 544, themeCol)-- footer bottom
 
 
+    cyberMenuUI.fxStep(showMenu)
+
 -- MENU 0 - GAMES SCREEN
     if showMenu == 0 then
         -- MAIN VIEW
@@ -17098,7 +17754,7 @@ while true do
 
         wifi_offset = 0
         if Network.isWifiEnabled() then
-            Graphics.drawImage(798 + pstv_offset + wifi_offset, 35, imgWifi)-- wifi icon
+            settingsWheelUI.wifiIcon(798 + pstv_offset + wifi_offset, 35)-- wifi icon
 
             if pstv == true then
                 pstv_offset = 110
@@ -17117,7 +17773,7 @@ while true do
 
         if setTime == 0 then
             -- 24 hour clock
-            Font.print(fnt20, 726 + pstv_offset + wifi_offset, 34, string.format("%02d:%02d", h, m), white)-- Draw time
+            Font.print(fnt20, 726 + pstv_offset + wifi_offset, 34, string.format("%02d:%02d", h, m), uiBlue)-- Draw time
         else
             -- 12 hour clock
             local ampm = " AM"
@@ -17146,22 +17802,15 @@ while true do
             local time12hr = (string.format("%d:%02d", h, m))
             labeltime12hr = Font.getTextWidth(fnt14, time12hr)
 
-            Font.print(fnt20, 726 - time24_offset + pstv_offset + wifi_offset, 34, (string.format("%d:%02d", h, m)), white)-- Draw time
-            Font.print(fnt14, 726 - time24_offset + pstv_offset + wifi_offset + labeltime12hr + 15, 40, ampm, white)-- Draw time
+            Font.print(fnt20, 726 - time24_offset + pstv_offset + wifi_offset, 34, (string.format("%d:%02d", h, m)), uiBlue)-- Draw time
+            Font.print(fnt14, 726 - time24_offset + pstv_offset + wifi_offset + labeltime12hr + 15, 40, ampm, uiBlue)-- Draw time
         end
 
         if pstv == false then
             life = System.getBatteryPercentage()
-            Font.print(fnt20, 840, 34, life .. "%", white)-- Draw battery
+            Font.print(fnt20, 840, 34, life .. "%", uiBlue)-- Draw battery
 
-            if System.isBatteryCharging() then
-                -- Draw charging icon
-                Graphics.drawImage(888, 39, imgBatteryCharging)
-            else
-                -- Draw normal battery icon
-                Graphics.drawImage(888, 39, imgBattery)
-                Graphics.fillRect(891, 891 + (life / 5.2), 43, 51, white)
-            end
+            settingsWheelUI.batteryIcon(888, 39, life, System.isBatteryCharging())
 
         end
 
@@ -17172,78 +17821,23 @@ while true do
         label3 = Font.getTextWidth(fnt20, lang_lines.Category)
         label4 = Font.getTextWidth(fnt20, lang_lines.View)
         
-        if showCat == 1 then Font.print(fnt22, 32, 34,      lang_lines.PS_Vita, white)
-        elseif showCat == 2 then Font.print(fnt22, 32, 34,  lang_lines.Homebrews, white)
-        elseif showCat == 3 then Font.print(fnt22, 32, 34,  lang_lines.PSP, white)
-        elseif showCat == 4 then Font.print(fnt22, 32, 34,  lang_lines.PlayStation, white)
-        elseif showCat == 5 then Font.print(fnt22, 32, 34,  lang_lines.Playstation_Mobile, white)
-        elseif showCat == 6 then Font.print(fnt22, 32, 34,  lang_lines.Nintendo_64, white)
-        elseif showCat == 7 then Font.print(fnt22, 32, 34,  lang_lines.Super_Nintendo, white)
-        elseif showCat == 8 then Font.print(fnt22, 32, 34,  lang_lines.Nintendo_Entertainment_System, white)
-        elseif showCat == 9 then Font.print(fnt22, 32, 34,  lang_lines.Nintendo_DS, white)
-        elseif showCat == 10 then Font.print(fnt22, 32, 34, lang_lines.Game_Boy_Advance, white)
-        elseif showCat == 11 then Font.print(fnt22, 32, 34, lang_lines.Game_Boy_Color, white)
-        elseif showCat == 12 then Font.print(fnt22, 32, 34, lang_lines.Game_Boy, white)
-        elseif showCat == 13 then Font.print(fnt22, 32, 34, lang_lines.Sega_Dreamcast, white)
-        elseif showCat == 14 then Font.print(fnt22, 32, 34, lang_lines.Sega_CD, white)
-        elseif showCat == 15 then Font.print(fnt22, 32, 34, lang_lines.Sega_32X, white)
-        elseif showCat == 16 then Font.print(fnt22, 32, 34, lang_lines.Sega_Mega_Drive, white)
-        elseif showCat == 17 then Font.print(fnt22, 32, 34, lang_lines.Sega_Master_System, white)
-        elseif showCat == 18 then Font.print(fnt22, 32, 34, lang_lines.Sega_Game_Gear, white)        
-        elseif showCat == 19 then Font.print(fnt22, 32, 34, lang_lines.TurboGrafx_16, white)
-        elseif showCat == 20 then Font.print(fnt22, 32, 34, lang_lines.TurboGrafx_CD, white)
-        elseif showCat == 21 then Font.print(fnt22, 32, 34, lang_lines.PC_Engine, white)
-        elseif showCat == 22 then Font.print(fnt22, 32, 34, lang_lines.PC_Engine_CD, white)
-        elseif showCat == 23 then Font.print(fnt22, 32, 34, lang_lines.Amiga, white)
-        elseif showCat == 24 then Font.print(fnt22, 32, 34, lang_lines.ScummVM, white)
-        elseif showCat == 25 then Font.print(fnt22, 32, 34, lang_lines.EasyRPG, white)
-        elseif showCat == 26 then Font.print(fnt22, 32, 34, lang_lines.MS_DOS, white)
-        elseif showCat == 27 then Font.print(fnt22, 32, 34, lang_lines.Commodore_64, white)
-        elseif showCat == 28 then Font.print(fnt22, 32, 34, lang_lines.WonderSwan_Color, white)
-        elseif showCat == 29 then Font.print(fnt22, 32, 34, lang_lines.WonderSwan, white)
-        elseif showCat == 30 then Font.print(fnt22, 32, 34, lang_lines.PICO8, white)
-        elseif showCat == 31 then Font.print(fnt22, 32, 34, lang_lines.MSX2, white)
-        elseif showCat == 32 then Font.print(fnt22, 32, 34, lang_lines.MSX, white)
-        elseif showCat == 33 then Font.print(fnt22, 32, 34, lang_lines.ZX_Spectrum, white)
-        elseif showCat == 34 then Font.print(fnt22, 32, 34, lang_lines.Atari_ST, white)
-        elseif showCat == 35 then Font.print(fnt22, 32, 34, lang_lines.Atari_7800, white)
-        elseif showCat == 36 then Font.print(fnt22, 32, 34, lang_lines.Atari_5200, white)
-        elseif showCat == 37 then Font.print(fnt22, 32, 34, lang_lines.Atari_2600, white)
-        elseif showCat == 38 then Font.print(fnt22, 32, 34, lang_lines.Atari_Lynx, white)
-        elseif showCat == 39 then Font.print(fnt22, 32, 34, lang_lines.ColecoVision, white)
-        elseif showCat == 40 then Font.print(fnt22, 32, 34, lang_lines.Vectrex, white)
-        elseif showCat == 41 then Font.print(fnt22, 32, 34, lang_lines.FBA_2012, white)
-        elseif showCat == 42 then Font.print(fnt22, 32, 34, lang_lines.MAME_2003Plus, white)
-        elseif showCat == 43 then Font.print(fnt22, 32, 34, lang_lines.MAME_2000, white)
-        elseif showCat == 44 then Font.print(fnt22, 32, 34, lang_lines.Neo_Geo, white)
-        elseif showCat == 45 then Font.print(fnt22, 32, 34, lang_lines.Neo_Geo_Pocket_Color, white)
-        elseif showCat == 46 then Font.print(fnt22, 32, 34, lang_lines.System_Apps, white)  
-        elseif showCat == 47 then Font.print(fnt22, 32, 34, lang_lines.Favorites, white)
-        elseif showCat == 48 then Font.print(fnt22, 32, 34, lang_lines.Recently_Played, white)
-        elseif showCat == 49 then
-            if random_game_selected == false then
-                Font.print(fnt22, 32, 34, lang_lines.Search_Results, white)
-            else
-                Font.print(fnt22, 32, 34, lang_lines.Random_Game, white)
-            end            
-        elseif showCat >= 50 and showCat <= collection_syscount then Collection_CatNum = showCat - 49 Font.print(fnt22, 32, 34, collection_files[Collection_CatNum].display_name, white)
-
-        else Font.print(fnt22, 32, 34, lang_lines.All, white)
+        if showCat >= 50 and showCat <= collection_syscount then
+            Collection_CatNum = showCat - 49
         end
     
         if showView ~= 2 then
             if showView == 5 then
-                Font.print(fnt22, fv_left_margin - fv_border, fv_cover_height + fv_cover_y + 30, app_title, white)
+                Font.print(fnt22, fv_left_margin - fv_border, fv_cover_height + fv_cover_y + 30, app_title, uiBlue)
             elseif showView == 6 then
             else
                 Graphics.fillRect(0, 960, 424, 496, black)-- black footer bottom
-                PrintCentered(fnt25, 480, 430, app_title, white, 25)-- Draw title
+                PrintCentered(fnt25, 480, 430, app_title, uiBlue, 25)-- Draw title
             end
         else
             Graphics.fillRect(0, 960, 496, 544, themeCol)-- footer bottom
             
             -- Add gradient to mask out long names so they don't crash into the footer controls 
-            Font.print(fnt22, 24, 506, app_title, white)
+            Font.print(fnt22, 24, 506, app_title, uiBlue)
             Graphics.drawImage(900-(btnMargin * 8)-label1-label2-label3-label4, 496, footer_gradient, themeCol)
             Graphics.fillRect(900-(btnMargin * 8)-label1-label2-label3-label4+48, 960, 496, 544, themeCol)
         end
@@ -17251,17 +17845,17 @@ while true do
         
 
         Graphics.drawImage(900-label1, 510, btnX)
-        Font.print(fnt20, 900+28-label1, 508, lang_lines.Launch, white)--Launch
+        Font.print(fnt20, 900+28-label1, 508, lang_lines.Launch, uiBlue)--Launch
 
         Graphics.drawImage(900-(btnMargin * 2)-label1-label2, 510, btnT)
-        Font.print(fnt20, 900+28-(btnMargin * 2)-label1-label2, 508, lang_lines.Details, white)--Details
+        Font.print(fnt20, 900+28-(btnMargin * 2)-label1-label2, 508, lang_lines.Details, uiBlue)--Details
 
         Graphics.drawImage(900-(btnMargin * 4)-label1-label2-label3, 510, btnS)
-        Font.print(fnt20, 900+28-(btnMargin * 4)-label1-label2-label3, 508, lang_lines.Category, white)--Category
+        Font.print(fnt20, 900+28-(btnMargin * 4)-label1-label2-label3, 508, lang_lines.Category, uiBlue)--Category
 
         if setChangeViews == 1 then
             Graphics.drawImage(900-(btnMargin * 6)-label1-label2-label3-label4, 510, btnO)
-            Font.print(fnt20, 900+28-(btnMargin * 6)-label1-label2-label3-label4, 508, lang_lines.View, white)--View
+            Font.print(fnt20, 900+28-(btnMargin * 6)-label1-label2-label3-label4, 508, lang_lines.View, uiBlue)--View
         end
         
         -- Draw Covers
@@ -18280,7 +18874,11 @@ while true do
         for index, entry in ipairs(settingsWheelEntries) do
             local label = entry.label and lang_lines[entry.label] or entry.fallback
             label = string.upper((tostring(label):gsub("%s*:%s*$", "")))
-            settingsWheelUI.button(entry, index - 1 == menuY, label)
+            if entry.card then
+                cyberMenuUI.themeCard(entry, index - 1 == menuY, label)
+            else
+                settingsWheelUI.button(entry, index - 1 == menuY, label)
+            end
         end
         settingsWheelUI.clock()
 
@@ -18505,7 +19103,7 @@ while true do
         cyberMenuUI.begin(lang_lines.Theme)
 
 
-        menuItems = 7
+        menuItems = 6
 
         -- MENU 4 / #0 Back
         Font.print(fnt22, setting_x, setting_y0, lang_lines.Back_Chevron, white)--Back
@@ -18538,10 +19136,6 @@ while true do
         -- MENU 4 / #6 Change views
         Font.print(fnt22, setting_x, setting_y6, lang_lines.Change_Views_colon, white) -- Change Views:
         settingsWheelUI.toggle(setting_x_offset, setting_y6 - 2, setChangeViews)
-
-        -- MENU 4 / #7 Cyberpunk Theme
-        Font.print(fnt22, setting_x, setting_y7, lang_lines.Cyberpunk_Theme_colon or "Cyberpunk Theme: ", white)
-        settingsWheelUI.slider(setting_x_offset, setting_y7 - 2, cyberpunkThemes[previewCyberpunkTheme].name)
 
 
         cyberMenuUI.restore()
@@ -18618,11 +19212,6 @@ while true do
                     else
                         setChangeViews = 1
                     end
-                elseif menuY == 7 then -- #7 Cyberpunk theme
-                    if selectedCyberpunkTheme ~= previewCyberpunkTheme then
-                        selectedCyberpunkTheme = previewCyberpunkTheme
-                        restart_after_frame = true
-                    end
                 end
 
                 --Save settings
@@ -18649,20 +19238,6 @@ while true do
                     end
                     SetThemeColor()
                     SaveSettings()
-                elseif menuY == 7 then
-                    if previewCyberpunkTheme > 0 then
-                        previewCyberpunkTheme = previewCyberpunkTheme - 1
-                    else
-                        previewCyberpunkTheme = cyberpunkThemeCount
-                    end
-                end
-            elseif (Controls.check(pad, SCE_CTRL_RIGHT)) and not (Controls.check(oldpad, SCE_CTRL_RIGHT)) then
-                if menuY == 7 then
-                    if previewCyberpunkTheme < cyberpunkThemeCount then
-                        previewCyberpunkTheme = previewCyberpunkTheme + 1
-                    else
-                        previewCyberpunkTheme = 0
-                    end
                 end
             end
             
@@ -19116,18 +19691,11 @@ while true do
         label1 = Font.getTextWidth(fnt20, lang_lines.Close)--Close
         label2 = Font.getTextWidth(fnt20, lang_lines.Select)--Select
 
-        Graphics.drawImage(900-label1, 510, btnO)
-        Font.print(fnt20, 900+28-label1, 508, lang_lines.Close, white)--Close
 
-        Graphics.drawImage(900-(btnMargin * 2)-label1-label2, 510, btnX)
-        Font.print(fnt20, 900+28-(btnMargin * 2)-label1-label2, 508, lang_lines.Select, white)--Select
 
-        Graphics.fillRect(60, 900, 34, 460, darkalpha)
 
-        Font.print(fnt22, setting_x, setting_yh, lang_lines.Game_directories, white)--Game_directories
-        Graphics.fillRect(60, 900, 78, 81, white)
 
-        Graphics.fillRect(60, 900, 82 + (menuY * 47), 129 + (menuY * 47), themeCol)-- selection
+        cyberMenuUI.begin(lang_lines.Game_directories)
 
         menuItems = 3
 
@@ -19300,6 +19868,8 @@ while true do
         -- MENU 8 / #3 Rescan
         Font.print(fnt22, setting_x, setting_y3, lang_lines.Rescan, white)--Rescan 
 
+        cyberMenuUI.restore()
+
         -- MENU 8 - FUNCTIONS
         status = System.getMessageState()
         if status ~= RUNNING then
@@ -19364,24 +19934,14 @@ while true do
         label3 = Font.getTextWidth(fnt20, lang_lines.Close)--Close
 
         -- Draw footer
-        Graphics.fillRect(0, 960, 496, 544, themeCol)-- footer bottom
-
-        Graphics.drawImage(900-label1, 510, btnO)
-        Font.print(fnt20, 900+28-label1, 508, lang_lines.Back, white)--Back
-
-        Graphics.drawImage(900-(btnMargin * 2)-label1-label2, 510, btnX)
-        Font.print(fnt20, 900+28-(btnMargin * 2)-label1-label2, 508, lang_lines.Select, white)--Select
-
-        Graphics.drawImage(900-(btnMargin * 4)-label1-label2-label3, 510, btnT)
-        Font.print(fnt20, 900+28-(btnMargin * 4)-label1-label2-label3, 508, lang_lines.Close, white)--Close
 
 
-        Graphics.fillRect(60, 900, 34, 460, darkalpha)--dark background
 
-        Font.print(fnt22, setting_x, setting_yh, filebrowser_heading, white)--Game heading from menu 8
-        Graphics.fillRect(60, 900, 78, 81, white)
 
-        Graphics.fillRect(60, 900, 82 + (menuY * 47 +47), 129 + (menuY * 47 +47), themeCol)-- selection
+
+
+
+        cyberMenuUI.begin(filebrowser_heading, { rowOffset = 1, footer = { { text = lang_lines.Back, icon = btnO }, { text = lang_lines.Select, icon = btnX }, { text = lang_lines.Close, icon = btnT } } })
 
         -- menuItems = 3
 
@@ -19393,52 +19953,54 @@ while true do
             
             -- MENU 9 / #0 ux0 
             if System.doesDirExist("ux0:/") then
-                Graphics.drawImage(setting_x_icon, setting_y1, setting_icon_scanning)
+                Graphics.drawImage(setting_x_icon, setting_y1 - 4, setting_icon_scanning)
                 Font.print(fnt22, setting_x_icon_offset, setting_y1, "ux0:", white)--ux0
             else
-                Graphics.drawImage(setting_x_icon, setting_y1, setting_icon_scanning, white_opaque)
+                Graphics.drawImage(setting_x_icon, setting_y1 - 4, setting_icon_scanning, white_opaque)
                 Font.print(fnt22, setting_x_icon_offset, setting_y1, "ux0:", white_opaque)--ux0
             end
 
             -- MENU 9 / #1 uma0
             if System.doesDirExist("uma0:/") then
-                Graphics.drawImage(setting_x_icon, setting_y2, setting_icon_scanning)
+                Graphics.drawImage(setting_x_icon, setting_y2 - 4, setting_icon_scanning)
                 Font.print(fnt22, setting_x_icon_offset, setting_y2, "uma0:", white)--uma0
             else
-                Graphics.drawImage(setting_x_icon, setting_y2, setting_icon_scanning, white_opaque)
+                Graphics.drawImage(setting_x_icon, setting_y2 - 4, setting_icon_scanning, white_opaque)
                 Font.print(fnt22, setting_x_icon_offset, setting_y2, "uma0:", white_opaque)--uma0
             end
 
             -- MENU 9 / #2 imc0
             if System.doesDirExist("imc0:/") then
-                Graphics.drawImage(setting_x_icon, setting_y3, setting_icon_scanning)
+                Graphics.drawImage(setting_x_icon, setting_y3 - 4, setting_icon_scanning)
                 Font.print(fnt22, setting_x_icon_offset, setting_y3, "imc0:", white)--imc0
             else
-                Graphics.drawImage(setting_x_icon, setting_y3, setting_icon_scanning, white_opaque)
+                Graphics.drawImage(setting_x_icon, setting_y3 - 4, setting_icon_scanning, white_opaque)
                 Font.print(fnt22, setting_x_icon_offset, setting_y3, "imc0:", white_opaque)--imc0
             end
 
             -- MENU 9 / #3 xmc0
             if System.doesDirExist("xmc0:/") then
-                Graphics.drawImage(setting_x_icon, setting_y4, setting_icon_scanning)
+                Graphics.drawImage(setting_x_icon, setting_y4 - 4, setting_icon_scanning)
                 Font.print(fnt22, setting_x_icon_offset, setting_y4, "xmc0:", white)--xmc0
             else
-                Graphics.drawImage(setting_x_icon, setting_y4, setting_icon_scanning, white_opaque)
+                Graphics.drawImage(setting_x_icon, setting_y4 - 4, setting_icon_scanning, white_opaque)
                 Font.print(fnt22, setting_x_icon_offset, setting_y4, "xmc0:", white_opaque)--xmc0
             end
 
             -- MENU 9 / #4 grw0
             if System.doesDirExist("grw0:/") then
-                Graphics.drawImage(setting_x_icon, setting_y5, setting_icon_scanning)
+                Graphics.drawImage(setting_x_icon, setting_y5 - 4, setting_icon_scanning)
                 Font.print(fnt22, setting_x_icon_offset, setting_y5, "grw0:", white)--xmc0
             else
-                Graphics.drawImage(setting_x_icon, setting_y5, setting_icon_scanning, white_opaque)
+                Graphics.drawImage(setting_x_icon, setting_y5 - 4, setting_icon_scanning, white_opaque)
                 Font.print(fnt22, setting_x_icon_offset, setting_y5, "grw0:", white_opaque)--xmc0
             end
 
 
         -- END ROM BROWSER PARTITIONS
 
+
+        cyberMenuUI.restore()
 
         -- MENU 9 - FUNCTIONS
         status = System.getMessageState()
@@ -19539,25 +20101,15 @@ while true do
         label3 = Font.getTextWidth(fnt20, lang_lines.Close)--Close
 
         -- Draw footer
-        Graphics.fillRect(0, 960, 496, 544, themeCol)-- footer bottom
-
-        Graphics.drawImage(900-label1, 510, btnO)
-        Font.print(fnt20, 900+28-label1, 508, lang_lines.Back, white)--Back
-
-        Graphics.drawImage(900-(btnMargin * 2)-label1-label2, 510, btnX)
-        Font.print(fnt20, 900+28-(btnMargin * 2)-label1-label2, 508, lang_lines.Select, white)--Select
-
-        Graphics.drawImage(900-(btnMargin * 4)-label1-label2-label3, 510, btnT)
-        Font.print(fnt20, 900+28-(btnMargin * 4)-label1-label2-label3, 508, lang_lines.Close, white)--Close
 
 
-        Graphics.fillRect(60, 900, 34, 460, darkalpha)--dark background
 
-        Font.print(fnt22, setting_x, setting_yh, filebrowser_heading, white)--Game heading from menu 8
-        Graphics.fillRect(60, 900, 78, 81, white)
+
+
+
 
         -- Graphics.fillRect(60, 900, 89 + (menuY * 50 +50), 150 + (menuY * 50 +50), themeCol)-- selection
-        Graphics.fillRect(60, 900, 82 + (menuY * 47 +47), 129 + (menuY * 47 +47), themeCol)-- selection
+        cyberMenuUI.begin(filebrowser_heading, { rowOffset = 1, footer = { { text = lang_lines.Back, icon = btnO }, { text = lang_lines.Select, icon = btnX }, { text = lang_lines.Close, icon = btnT } } })
 
         menuItems = 0
 
@@ -19565,6 +20117,8 @@ while true do
         Font.print(fnt22, setting_x, setting_y1, "...", white)--Back
 
 
+
+        cyberMenuUI.restore()
 
         -- MENU 10 - FUNCTIONS
         status = System.getMessageState()
@@ -19615,13 +20169,10 @@ while true do
         label2 = Font.getTextWidth(fnt20, lang_lines.Select)--Select
         label3 = Font.getTextWidth(fnt20, lang_lines.Close)--Close
 
-        Graphics.fillRect(60, 900, 34, 460, darkalpha)--dark background
 
-        Font.print(fnt22, setting_x, setting_yh, filebrowser_heading, white)--Game heading from menu 8
-        Graphics.fillRect(60, 900, 78, 81, white)
 
         -- Graphics.fillRect(60, 900, 150 + (menuY * 46), 200 + (menuY * 46), themeCol)-- selection
-        Graphics.fillRect(60, 900, 82 + (menuY * 47 +47), 129 + (menuY * 47 +47), themeCol)-- selection
+        cyberMenuUI.begin(filebrowser_heading, { rowOffset = 1, footer = { { text = lang_lines.Back, icon = btnO }, { text = lang_lines.Select, icon = btnX }, { text = lang_lines.Close, icon = btnT } } })
 
         -- START ROM BROWSER
 
@@ -19648,22 +20199,22 @@ while true do
                     -- Icon - Folder Open -- Use this directory
                     elseif file.directory == true and file.save == true then
                         Font.print(fnt22, setting_x_icon_offset, y, file.name, color)
-                        Graphics.drawImage(setting_x, y, file_browser_folder_open)
+                        Graphics.drawImage(setting_x, y - 4, file_browser_folder_open)
 
                     -- Icon - Folder Closed
                     elseif file.directory == true and file.save == false and file.previous_directory == false then
                         Font.print(fnt22, setting_x_icon_offset, y, file.name, color)
-                        Graphics.drawImage(setting_x, y, file_browser_folder_closed)
+                        Graphics.drawImage(setting_x, y - 4, file_browser_folder_closed)
 
                     -- Icon - File
                     elseif file.directory == false then
                         Font.print(fnt22, setting_x_icon_offset, y, file.name, color)
-                        Graphics.drawImage(setting_x, y, file_browser_file)
+                        Graphics.drawImage(setting_x, y - 4, file_browser_file)
 
                     else
                     end
 
-                    y = y + 47
+                    y = y + cyberMenuUI.rowPitch
                 end
             end
 
@@ -19671,20 +20222,15 @@ while true do
 
 
         -- Draw footer ontop of dynamic list
-        Graphics.fillRect(0, 960, 496, 544, themeCol)-- footer bottom
 
-        Graphics.drawImage(900-label1, 510, btnO)
-        Font.print(fnt20, 900+28-label1, 508, lang_lines.Back, white)--Back
 
-        Graphics.drawImage(900-(btnMargin * 2)-label1-label2, 510, btnX)
-        Font.print(fnt20, 900+28-(btnMargin * 2)-label1-label2, 508, lang_lines.Select, white)--Select
 
-        Graphics.drawImage(900-(btnMargin * 4)-label1-label2-label3, 510, btnT)
-        Font.print(fnt20, 900+28-(btnMargin * 4)-label1-label2-label3, 508, lang_lines.Close, white)--Close
 
 
         menuItems = 0
 
+
+        cyberMenuUI.restore()
 
         -- MENU 11 - FUNCTIONS
         status = System.getMessageState()
@@ -20070,15 +20616,10 @@ while true do
         label1 = Font.getTextWidth(fnt20, lang_lines.Close)--Close
         label2 = Font.getTextWidth(fnt20, lang_lines.Select)--Select
 
-        Graphics.drawImage(900-label1, 510, btnO)
-        Font.print(fnt20, 900+28-label1, 508, lang_lines.Close, white)--Close
 
-        Graphics.fillRect(60, 900, 34, 460, darkalpha)
 
-        Font.print(fnt22, setting_x, setting_yh, lang_lines.guide_1_heading, white)-- Guide 1 Heading
-        Graphics.fillRect(60, 900, 78, 81, white)
 
-        Graphics.fillRect(60, 900, 82 + (menuY * 47), 129 + (menuY * 47), themeCol)-- selection
+        cyberMenuUI.begin(lang_lines.guide_1_heading, { footer = { { text = lang_lines.Close, icon = btnO } } })
 
         menuItems = 1
         
@@ -20088,11 +20629,13 @@ while true do
         -- MENU 13 / #1 Content
         if setLanguage == 8 or setLanguage == 9 or setLanguage == 10 or setLanguage == 17 or setLanguage == 18 or setLanguage == 19 then
             -- Manual text wrapping for non latin alphabets
-            Font.print(fnt22, setting_x, setting_y1, lang_lines.guide_1_content, white)-- Guide 1 Content
+            Font.print(fnt22, setting_x, setting_y1, lang_lines.guide_1_content, cyberMenuUI.bodyText)-- Guide 1 Content
         else
-            Font.print(fnt22, setting_x, setting_y1, wraptextlength(lang_lines.guide_1_content, 75), white)-- Guide 1 Content
+            Font.print(fnt22, setting_x, setting_y1, wraptextlength(lang_lines.guide_1_content, 60), cyberMenuUI.bodyText)-- Guide 1 Content
         end
         
+        cyberMenuUI.restore()
+
         -- MENU 13 - FUNCTIONS
         status = System.getMessageState()
         if status ~= RUNNING then
@@ -20117,15 +20660,10 @@ while true do
         label1 = Font.getTextWidth(fnt20, lang_lines.Close)--Close
         label2 = Font.getTextWidth(fnt20, lang_lines.Select)--Select
 
-        Graphics.drawImage(900-label1, 510, btnO)
-        Font.print(fnt20, 900+28-label1, 508, lang_lines.Close, white)--Close
 
-        Graphics.fillRect(60, 900, 34, 460, darkalpha)
 
-        Font.print(fnt22, setting_x, setting_yh, lang_lines.guide_2_heading, white)-- Guide 2 Heading
-        Graphics.fillRect(60, 900, 78, 81, white)
 
-        Graphics.fillRect(60, 900, 82 + (menuY * 47), 129 + (menuY * 47), themeCol)-- selection
+        cyberMenuUI.begin(lang_lines.guide_2_heading, { footer = { { text = lang_lines.Close, icon = btnO } } })
 
         menuItems = 1
         
@@ -20135,11 +20673,13 @@ while true do
         -- MENU 14 / #1 Content
         if setLanguage == 8 or setLanguage == 9 or setLanguage == 10 or setLanguage == 17 or setLanguage == 18 or setLanguage == 19 then
             -- Manual text wrapping for non latin alphabets
-            Font.print(fnt22, setting_x, setting_y1, lang_lines.guide_2_content, white)-- Guide 2 Content
+            Font.print(fnt22, setting_x, setting_y1, lang_lines.guide_2_content, cyberMenuUI.bodyText)-- Guide 2 Content
         else
-            Font.print(fnt22, setting_x, setting_y1, wraptextlength(lang_lines.guide_2_content, 75), white)-- Guide 2 Content
+            Font.print(fnt22, setting_x, setting_y1, wraptextlength(lang_lines.guide_2_content, 60), cyberMenuUI.bodyText)-- Guide 2 Content
         end
         
+        cyberMenuUI.restore()
+
         -- MENU 14 - FUNCTIONS
         status = System.getMessageState()
         if status ~= RUNNING then
@@ -20164,15 +20704,10 @@ while true do
         label1 = Font.getTextWidth(fnt20, lang_lines.Close)--Close
         label2 = Font.getTextWidth(fnt20, lang_lines.Select)--Select
 
-        Graphics.drawImage(900-label1, 510, btnO)
-        Font.print(fnt20, 900+28-label1, 508, lang_lines.Close, white)--Close
 
-        Graphics.fillRect(60, 900, 34, 460, darkalpha)
 
-        Font.print(fnt22, setting_x, setting_yh, lang_lines.guide_3_heading, white)-- Guide 3 Heading
-        Graphics.fillRect(60, 900, 78, 81, white)
 
-        Graphics.fillRect(60, 900, 82 + (menuY * 47), 129 + (menuY * 47), themeCol)-- selection
+        cyberMenuUI.begin(lang_lines.guide_3_heading, { footer = { { text = lang_lines.Close, icon = btnO } } })
 
         menuItems = 1
         
@@ -20182,12 +20717,14 @@ while true do
         -- MENU 15 / #1 Content
         if setLanguage == 8 or setLanguage == 9 or setLanguage == 10 or setLanguage == 17 or setLanguage == 18 or setLanguage == 19 then
             -- Manual text wrapping for non latin alphabets
-            Font.print(fnt22, setting_x, setting_y1, lang_lines.guide_3_content, white)-- Guide 3 Content
+            Font.print(fnt22, setting_x, setting_y1, lang_lines.guide_3_content, cyberMenuUI.bodyText)-- Guide 3 Content
         else
-            Font.print(fnt22, setting_x, setting_y1, wraptextlength(lang_lines.guide_3_content, 75), white)-- Guide 3 Content
+            Font.print(fnt22, setting_x, setting_y1, wraptextlength(lang_lines.guide_3_content, 60), cyberMenuUI.bodyText)-- Guide 3 Content
         end
 
         
+        cyberMenuUI.restore()
+
         -- MENU 15 - FUNCTIONS
         status = System.getMessageState()
         if status ~= RUNNING then
@@ -20212,15 +20749,10 @@ while true do
         label1 = Font.getTextWidth(fnt20, lang_lines.Close)--Close
         label2 = Font.getTextWidth(fnt20, lang_lines.Select)--Select
 
-        Graphics.drawImage(900-label1, 510, btnO)
-        Font.print(fnt20, 900+28-label1, 508, lang_lines.Close, white)--Close
 
-        Graphics.fillRect(60, 900, 34, 460, darkalpha)
 
-        Font.print(fnt22, setting_x, setting_yh, lang_lines.guide_4_heading, white)-- Guide 4 Heading
-        Graphics.fillRect(60, 900, 78, 81, white)
 
-        Graphics.fillRect(60, 900, 82 + (menuY * 47), 129 + (menuY * 47), themeCol)-- selection
+        cyberMenuUI.begin(lang_lines.guide_4_heading, { footer = { { text = lang_lines.Close, icon = btnO } } })
 
         menuItems = 1
         
@@ -20230,12 +20762,14 @@ while true do
         -- MENU 16 / #1 Content
         if setLanguage == 8 or setLanguage == 9 or setLanguage == 10 or setLanguage == 17 or setLanguage == 18 or setLanguage == 19 then
             -- Manual text wrapping for non latin alphabets
-            Font.print(fnt22, setting_x, setting_y1, lang_lines.guide_4_content, white)-- Guide 4 Content
+            Font.print(fnt22, setting_x, setting_y1, lang_lines.guide_4_content, cyberMenuUI.bodyText)-- Guide 4 Content
         else
-            Font.print(fnt22, setting_x, setting_y1, wraptextlength(lang_lines.guide_4_content, 75), white)-- Guide 4 Content
+            Font.print(fnt22, setting_x, setting_y1, wraptextlength(lang_lines.guide_4_content, 60), cyberMenuUI.bodyText)-- Guide 4 Content
         end
 
         
+        cyberMenuUI.restore()
+
         -- MENU 16 - FUNCTIONS
         status = System.getMessageState()
         if status ~= RUNNING then
@@ -20260,15 +20794,10 @@ while true do
         label1 = Font.getTextWidth(fnt20, lang_lines.Close)--Close
         label2 = Font.getTextWidth(fnt20, lang_lines.Select)--Select
 
-        Graphics.drawImage(900-label1, 510, btnO)
-        Font.print(fnt20, 900+28-label1, 508, lang_lines.Close, white)--Close
 
-        Graphics.fillRect(60, 900, 34, 460, darkalpha)
 
-        Font.print(fnt22, setting_x, setting_yh, lang_lines.guide_5_heading, white)-- Guide 5 Heading
-        Graphics.fillRect(60, 900, 78, 81, white)
 
-        Graphics.fillRect(60, 900, 82 + (menuY * 47), 129 + (menuY * 47), themeCol)-- selection
+        cyberMenuUI.begin(lang_lines.guide_5_heading, { footer = { { text = lang_lines.Close, icon = btnO } } })
 
         menuItems = 1
         
@@ -20278,11 +20807,13 @@ while true do
         -- MENU 17 / #1 Content
         if setLanguage == 8 or setLanguage == 9 or setLanguage == 10 or setLanguage == 17 or setLanguage == 18 or setLanguage == 19 then
             -- Manual text wrapping for non latin alphabets
-            Font.print(fnt22, setting_x, setting_y1, lang_lines.guide_5_content, white)-- Guide 5 Content
+            Font.print(fnt22, setting_x, setting_y1, lang_lines.guide_5_content, cyberMenuUI.bodyText)-- Guide 5 Content
         else
-            Font.print(fnt22, setting_x, setting_y1, wraptextlength(lang_lines.guide_5_content, 75), white)-- Guide 5 Content
+            Font.print(fnt22, setting_x, setting_y1, wraptextlength(lang_lines.guide_5_content, 60), cyberMenuUI.bodyText)-- Guide 5 Content
         end
         
+        cyberMenuUI.restore()
+
         -- MENU 17 - FUNCTIONS
         status = System.getMessageState()
         if status ~= RUNNING then
@@ -20307,15 +20838,10 @@ while true do
         label1 = Font.getTextWidth(fnt20, lang_lines.Close)--Close
         label2 = Font.getTextWidth(fnt20, lang_lines.Select)--Select
 
-        Graphics.drawImage(900-label1, 510, btnO)
-        Font.print(fnt20, 900+28-label1, 508, lang_lines.Close, white)--Close
 
-        Graphics.fillRect(60, 900, 34, 460, darkalpha)
 
-        Font.print(fnt22, setting_x, setting_yh, lang_lines.guide_6_heading, white)-- Guide 6 Heading
-        Graphics.fillRect(60, 900, 78, 81, white)
 
-        Graphics.fillRect(60, 900, 82 + (menuY * 47), 129 + (menuY * 47), themeCol)-- selection
+        cyberMenuUI.begin(lang_lines.guide_6_heading, { footer = { { text = lang_lines.Close, icon = btnO } } })
 
         menuItems = 1
         
@@ -20323,14 +20849,15 @@ while true do
         Font.print(fnt22, setting_x, setting_y0, lang_lines.Back_Chevron, white)--Back
         
         -- MENU 18 / #1 Content
-        Font.print(fnt22, setting_x, setting_y1, "RetroFlow version " .. appversion, white)-- Guide 6 Content
-        
-        if setLanguage == 8 or setLanguage == 9 or setLanguage == 10 or setLanguage == 17 or setLanguage == 18 or setLanguage == 19 then
-            -- Manual text wrapping for non latin alphabets
-            Font.print(fnt22, setting_x, setting_y2, lang_lines.guide_6_content, white)-- Guide 6 Content
-        else
-            Font.print(fnt22, setting_x, setting_y2, wraptextlength(lang_lines.guide_6_content, 75), white)-- Guide 6 Content
-        end
+        Font.print(fnt22, setting_x, setting_y1, "CyberFlow Launcher (RetroFlow " .. appversion .. ")", white)-- Guide 6 Content
+
+        local cyberflowCredits = "CyberFlow Mod created by badmanwazzy37.\n\n" ..
+            "Credits to CDPROJEKT RED for creating such a breathtaking game, Cyberpunk 2077's legacy will live on forever.\n\n" ..
+            "Credits to Claude Sonnet 5.5 & Opus 5.5 for making the vision happen.\n\n" ..
+            "Credits to jimbob4000 & VitaHex for their initial and ongoing work on RetroFlow & HexFlow."
+        Font.print(fnt22, setting_x, setting_y2, wraptextlength(cyberflowCredits, 60), cyberMenuUI.bodyText)-- Guide 6 Content
+
+        cyberMenuUI.restore()
 
         -- MENU 18 - FUNCTIONS
         status = System.getMessageState()
@@ -20595,36 +21122,11 @@ while true do
             -- Calculate vertical centre
             vertically_centre_mini_menu(menuItems)
 
-        -- GRAPHIC SETUP
-        
-            -- Apply mini menu margins
-            local setting_x = setting_x + mini_menu_x_margin
-
-            -- Draw black overlay
-            Graphics.fillRect(0, 960, 0, 540, blackalpha)
-
-            -- Draw footer
-            Graphics.fillRect(0, 960, 496, 544, themeCol)
-
-            Graphics.drawImage(900-label1, 510, btnO)
-            Font.print(fnt20, 900+28-label1, 508, lang_lines.Close, white)--Close
-
-            Graphics.drawImage(900-(btnMargin * 2)-label1-label2, 510, btnX)
-            Font.print(fnt20, 900+28-(btnMargin * 2)-label1-label2, 508, lang_lines.Select, white)--Select
-            
-            -- Draw dark overlay
-            Graphics.fillRect(60 + mini_menu_x_margin, 900 - mini_menu_x_margin, y_centre_top_margin, y_centre_top_margin + y_centre_box_height, dark)
-
-            -- Draw white line
-            Graphics.fillRect(60 + mini_menu_x_margin, 900 - mini_menu_x_margin, y_centre_white_line_start, y_centre_white_line_start + 3, white)
-            
-            -- Draw selection
-            Graphics.fillRect(60 + mini_menu_x_margin, 900 - mini_menu_x_margin, y_centre_selection_start + (menuY * 47), y_centre_selection_end + (menuY * 47), themeCol)-- selection
+        GetInfoSelected() -- Get game info for heading
+        cyberMenuUI.begin(app_title)
 
 
         -- MENU 20 / Heading
-        GetInfoSelected() -- Get game info for heading
-        Font.print(fnt22, setting_x, setting_yh + y_centre_text_offset, app_title, white)--Game Options
 
         -- MENU 20 / #0 Favorites
         if favourite_flag == true then
@@ -20708,6 +21210,8 @@ while true do
         
         
         
+        cyberMenuUI.restore()
+
         -- MENU 20 - FUNCTIONS
         status = System.getMessageState()
         if status ~= RUNNING then
@@ -21108,35 +21612,10 @@ while true do
         -- Calculate vertical centre
             vertically_centre_mini_menu(menuItems)
 
-        -- GRAPHIC SETUP
-        
-            -- Apply mini menu margins
-            local setting_x = setting_x + mini_menu_x_margin
-
-            -- Draw black overlay
-            Graphics.fillRect(0, 960, 0, 540, blackalpha)
-
-            -- Draw footer
-            Graphics.fillRect(0, 960, 496, 544, themeCol)
-
-            Graphics.drawImage(900-label1, 510, btnO)
-            Font.print(fnt20, 900+28-label1, 508, lang_lines.Close, white)--Close
-
-            Graphics.drawImage(900-(btnMargin * 2)-label1-label2, 510, btnX)
-            Font.print(fnt20, 900+28-(btnMargin * 2)-label1-label2, 508, lang_lines.Select, white)--Select
-            
-            -- Draw dark overlay
-            Graphics.fillRect(60 + mini_menu_x_margin, 900 - mini_menu_x_margin, y_centre_top_margin, y_centre_top_margin + y_centre_box_height, dark)
-
-            -- Draw white line
-            Graphics.fillRect(60 + mini_menu_x_margin, 900 - mini_menu_x_margin, y_centre_white_line_start, y_centre_white_line_start + 3, white)
-            
-            -- Draw selection
-            Graphics.fillRect(60 + mini_menu_x_margin, 900 - mini_menu_x_margin, y_centre_selection_start + (menuY * 47), y_centre_selection_end + (menuY * 47), themeCol)-- selection
+        cyberMenuUI.begin(lang_lines.Adrenaline_options)
 
 
         -- MENU 21 / Heading
-        Font.print(fnt22, setting_x, setting_yh + y_centre_text_offset, lang_lines.Adrenaline_options, white)--Adrenaline options
 
         -- MENU 21 / #0 Back
         Font.print(fnt22, setting_x, setting_y0 + y_centre_text_offset, lang_lines.Back_Chevron, white)--Back
@@ -21277,6 +21756,8 @@ while true do
         Font.print(fnt22, setting_x, setting_y8 + y_centre_text_offset, lang_lines.Save, white)--Save
 
         
+        cyberMenuUI.restore()
+
         -- MENU 21 - FUNCTIONS
         status = System.getMessageState()
         if status ~= RUNNING then
@@ -21479,35 +21960,10 @@ while true do
         -- Calculate vertical centre
             vertically_centre_mini_menu(menuItems)
 
-        -- GRAPHIC SETUP
-        
-            -- Apply mini menu margins
-            local setting_x = setting_x + mini_menu_x_margin
-
-            -- Draw black overlay
-            Graphics.fillRect(0, 960, 0, 540, blackalpha)
-
-            -- Draw footer
-            Graphics.fillRect(0, 960, 496, 544, themeCol)
-
-            Graphics.drawImage(900-label1, 510, btnO)
-            Font.print(fnt20, 900+28-label1, 508, lang_lines.Close, white)--Close
-
-            Graphics.drawImage(900-(btnMargin * 2)-label1-label2, 510, btnX)
-            Font.print(fnt20, 900+28-(btnMargin * 2)-label1-label2, 508, lang_lines.Select, white)--Select
-            
-            -- Draw dark overlay
-            Graphics.fillRect(60 + mini_menu_x_margin, 900 - mini_menu_x_margin, y_centre_top_margin, y_centre_top_margin + y_centre_box_height, dark)
-
-            -- Draw white line
-            Graphics.fillRect(60 + mini_menu_x_margin, 900 - mini_menu_x_margin, y_centre_white_line_start, y_centre_white_line_start + 3, white)
-            
-            -- Draw selection
-            Graphics.fillRect(60 + mini_menu_x_margin, 900 - mini_menu_x_margin, y_centre_selection_start + (menuY * 47), y_centre_selection_end + (menuY * 47), themeCol)-- selection
+        cyberMenuUI.begin(lang_lines.Add_to_collection)
 
 
         -- MENU 22 / Heading
-        Font.print(fnt22, setting_x, setting_yh + y_centre_text_offset, lang_lines.Add_to_collection, white)--Add to collection
 
         -- MENU 22 / #0 Back
         Font.print(fnt22, setting_x, setting_y0 + y_centre_text_offset, lang_lines.Back_Chevron, white)--Back
@@ -21527,6 +21983,8 @@ while true do
         Font.print(fnt22, setting_x, setting_y2 + y_centre_text_offset, lang_lines.Add_to_collection, white)--Add to collection
 
         
+        cyberMenuUI.restore()
+
         -- MENU 22 - FUNCTIONS
         status = System.getMessageState()
         if status ~= RUNNING then
@@ -21814,35 +22272,10 @@ while true do
         -- Calculate vertical centre
             vertically_centre_mini_menu(menuItems)
 
-        -- GRAPHIC SETUP
-        
-            -- Apply mini menu margins
-            local setting_x = setting_x + mini_menu_x_margin
-
-            -- Draw black overlay
-            Graphics.fillRect(0, 960, 0, 540, blackalpha)
-
-            -- Draw footer
-            Graphics.fillRect(0, 960, 496, 544, themeCol)
-
-            Graphics.drawImage(900-label1, 510, btnO)
-            Font.print(fnt20, 900+28-label1, 508, lang_lines.Close, white)--Close
-
-            Graphics.drawImage(900-(btnMargin * 2)-label1-label2, 510, btnX)
-            Font.print(fnt20, 900+28-(btnMargin * 2)-label1-label2, 508, lang_lines.Select, white)--Select
-            
-            -- Draw dark overlay
-            Graphics.fillRect(60 + mini_menu_x_margin, 900 - mini_menu_x_margin, y_centre_top_margin, y_centre_top_margin + y_centre_box_height, dark)
-
-            -- Draw white line
-            Graphics.fillRect(60 + mini_menu_x_margin, 900 - mini_menu_x_margin, y_centre_white_line_start, y_centre_white_line_start + 3, white)
-            
-            -- Draw selection
-            Graphics.fillRect(60 + mini_menu_x_margin, 900 - mini_menu_x_margin, y_centre_selection_start + (menuY * 47), y_centre_selection_end + (menuY * 47), themeCol)-- selection
+        cyberMenuUI.begin(lang_lines.Remove_from_collection)
 
             
         -- MENU 23 / Heading
-        Font.print(fnt22, setting_x, setting_yh + y_centre_text_offset, lang_lines.Remove_from_collection, white)--Remove from collection
 
         -- MENU 23 / #0 Back
         Font.print(fnt22, setting_x, setting_y0 + y_centre_text_offset, lang_lines.Back_Chevron, white)--Back
@@ -21870,6 +22303,8 @@ while true do
         Font.print(fnt22, setting_x, setting_y2 + y_centre_text_offset, lang_lines.Remove_from_collection, white)--Remove from collection
 
         
+        cyberMenuUI.restore()
+
         -- MENU 23 - FUNCTIONS
         status = System.getMessageState()
         if status ~= RUNNING then
@@ -22022,18 +22457,11 @@ while true do
         label1 = Font.getTextWidth(fnt20, lang_lines.Close)--Close
         label2 = Font.getTextWidth(fnt20, lang_lines.Select)--Select
 
-        Graphics.drawImage(900-label1, 510, btnO)
-        Font.print(fnt20, 900+28-label1, 508, lang_lines.Close, white)--Close
 
-        Graphics.drawImage(900-(btnMargin * 2)-label1-label2, 510, btnX)
-        Font.print(fnt20, 900+28-(btnMargin * 2)-label1-label2, 508, lang_lines.Select, white)--Select
 
-        Graphics.fillRect(60, 900, 34, 460, darkalpha)
 
-        Font.print(fnt22, setting_x, setting_yh, lang_lines.Edit_collections, white)--Edit_collections
-        Graphics.fillRect(60, 900, 78, 81, white)
 
-        Graphics.fillRect(60, 900, 82 + (menuY * 47), 129 + (menuY * 47), themeCol)-- selection
+        cyberMenuUI.begin(lang_lines.Edit_collections)
 
         menuItems = 4
 
@@ -22104,6 +22532,8 @@ while true do
 
         
     
+
+        cyberMenuUI.restore()
 
         -- MENU 24 - FUNCTIONS
         status = System.getMessageState()
@@ -22262,68 +22692,45 @@ while true do
             -- Calculate vertical centre
             vertically_centre_mini_menu(menuItems)
 
-        -- GRAPHIC SETUP
-        
-            -- Apply mini menu margins
-            local setting_x = setting_x + mini_menu_x_margin
-
-            -- Draw black overlay
-            Graphics.fillRect(0, 960, 0, 540, blackalpha)
-
-            -- Draw footer
-            Graphics.fillRect(0, 960, 496, 544, themeCol)
-
-            Graphics.drawImage(900-label1, 510, btnO)
-            Font.print(fnt20, 900+28-label1, 508, lang_lines.Close, white)--Close
-
-            Graphics.drawImage(900-(btnMargin * 2)-label1-label2, 510, btnX)
-            Font.print(fnt20, 900+28-(btnMargin * 2)-label1-label2, 508, lang_lines.Select, white)--Select
-            
-            -- Draw dark overlay
-            Graphics.fillRect(60 + mini_menu_x_margin, 900 - mini_menu_x_margin, y_centre_top_margin, y_centre_top_margin + y_centre_box_height, dark)
-
-            -- Draw white line
-            Graphics.fillRect(60 + mini_menu_x_margin, 900 - mini_menu_x_margin, y_centre_white_line_start, y_centre_white_line_start + 3, white)
-            
-            -- Draw selection
-            Graphics.fillRect(60 + mini_menu_x_margin, 900 - mini_menu_x_margin, y_centre_selection_start + (menuY * 47), y_centre_selection_end + (menuY * 47), themeCol)-- selection
+        cyberMenuUI.begin(lang_lines.Category)
 
 
         -- MENU 25 / Heading
-        Font.print(fnt22, setting_x, setting_yh + y_centre_text_offset, lang_lines.Category, white)--Category
 
         -- MENU 25 / #0 System Apps
-        Graphics.drawImage(setting_x, setting_y0 + y_centre_text_offset, setting_icon_random)
-        Font.print(fnt22, setting_x_icon_offset + 70, setting_y0 + y_centre_text_offset, lang_lines.Random_Game, white)--Random Game
+        Graphics.drawImage(setting_x, setting_y0 - 4, setting_icon_random)
+        Font.print(fnt22, setting_x_icon_offset, setting_y0 + y_centre_text_offset, lang_lines.Random_Game, white)--Random Game
 
         -- MENU 25 / #1 Favorites
-        Graphics.drawImage(setting_x, setting_y1 + y_centre_text_offset, setting_icon_heart)
-        Font.print(fnt22, setting_x_icon_offset + 70, setting_y1 + y_centre_text_offset, lang_lines.Favorites, white)--Favourites
+        Graphics.drawImage(setting_x, setting_y1 - 4, setting_icon_heart)
+        Font.print(fnt22, setting_x_icon_offset, setting_y1 + y_centre_text_offset, lang_lines.Favorites, white)--Favourites
 
         -- MENU 25 / #2 Recently Played
-        Graphics.drawImage(setting_x, setting_y2 + y_centre_text_offset, setting_icon_categories)
-        Font.print(fnt22, setting_x_icon_offset + 70, setting_y2 + y_centre_text_offset, lang_lines.Recently_Played, white)--Recently Played
+        Graphics.drawImage(setting_x, setting_y2 - 4, setting_icon_categories)
+        Font.print(fnt22, setting_x_icon_offset, setting_y2 + y_centre_text_offset, lang_lines.Recently_Played, white)--Recently Played
 
         -- MENU 25 / #3 System Apps
-        Graphics.drawImage(setting_x, setting_y3 + y_centre_text_offset, setting_icon_categories)
-        Font.print(fnt22, setting_x_icon_offset + 70, setting_y3 + y_centre_text_offset, lang_lines.System_Apps, white)--System Apps
+        Graphics.drawImage(setting_x, setting_y3 - 4, setting_icon_categories)
+        Font.print(fnt22, setting_x_icon_offset, setting_y3 + y_centre_text_offset, lang_lines.System_Apps, white)--System Apps
 
         -- MENU 25 / #4 Filter games
-        Graphics.drawImage(setting_x, setting_y4 + y_centre_text_offset, setting_icon_filter)
+        Graphics.drawImage(setting_x, setting_y4 - 4, setting_icon_filter)
 
         if filterGames == 0 then
-            Font.print(fnt22, setting_x_icon_offset + 70, setting_y4 + y_centre_text_offset, "<  " .. lang_lines.All .. "  >", white)
+            Font.print(fnt22, setting_x_icon_offset, setting_y4 + y_centre_text_offset, "<  " .. lang_lines.All .. "  >", white)
         else
-            Font.print(fnt22, setting_x_icon_offset + 70, setting_y4 + y_centre_text_offset, "<  " .. lang_lines.Collections .. "  >", white)
+            Font.print(fnt22, setting_x_icon_offset, setting_y4 + y_centre_text_offset, "<  " .. lang_lines.Collections .. "  >", white)
         end
 
         -- MENU 25 / #5 Dynamic - Add search results to collection
         if mode_add_search_results == true then
-            Graphics.drawImage(setting_x, setting_y5 + y_centre_text_offset, setting_icon_categories)
-            Font.print(fnt22, setting_x_icon_offset + 70, setting_y5 + y_centre_text_offset, lang_lines.Add_to_collection, white)--Add to collection
+            Graphics.drawImage(setting_x, setting_y5 - 4, setting_icon_categories)
+            Font.print(fnt22, setting_x_icon_offset, setting_y5 + y_centre_text_offset, lang_lines.Add_to_collection, white)--Add to collection
         end
 
         
+        cyberMenuUI.restore()
+
         -- MENU 25 - FUNCTIONS
         status = System.getMessageState()
         if status ~= RUNNING then
@@ -22514,16 +22921,9 @@ while true do
         label1 = Font.getTextWidth(fnt20, lang_lines.Back)--Back
         label2 = Font.getTextWidth(fnt20, lang_lines.Select)--Select
 
-        Graphics.drawImage(900-label1, 510, btnO)
-        Font.print(fnt20, 900+28-label1, 508, lang_lines.Back, white)--Back
 
-        Graphics.drawImage(900-(btnMargin * 2)-label1-label2, 510, btnX)
-        Font.print(fnt20, 900+28-(btnMargin * 2)-label1-label2, 508, lang_lines.Select, white)--Select
 
-        Graphics.fillRect(60, 900, 34, 460, darkalpha)
 
-        Font.print(fnt22, setting_x, setting_yh, lang_lines.Edit_category_visibility, white)
-        Graphics.fillRect(60, 900, 78, 81, white)
 
         if #visible_category_options == 0 then
             visible_category_selected = 1
@@ -22550,7 +22950,7 @@ while true do
         elseif menuY > visible_category_maxVisibleItems - 1 then
             menuY = visible_category_maxVisibleItems - 1
         end
-        Graphics.fillRect(60, 900, 82 + (menuY * 47), 129 + (menuY * 47), themeCol)
+        cyberMenuUI.begin(lang_lines.Edit_category_visibility, { footer = { { text = lang_lines.Back, icon = btnO }, { text = lang_lines.Select, icon = btnX } } })
 
         local visible_category_y = setting_y0
         for list_index = visible_category_scrollPosition + 1, #visible_category_options do
@@ -22562,11 +22962,13 @@ while true do
                     icon = category_visibility_checked
                     color = white
                 end
-                Graphics.drawImage(setting_x, visible_category_y, icon, color)
+                Graphics.drawImage(setting_x, visible_category_y - 4, icon, color)
                 Font.print(fnt22, setting_x_icon_offset, visible_category_y, category.display_name, color)
-                visible_category_y = visible_category_y + 47
+                visible_category_y = visible_category_y + cyberMenuUI.rowPitch
             end
         end
+
+        cyberMenuUI.restore()
 
         menuItems = 0
 
@@ -22614,16 +23016,9 @@ while true do
         label1 = Font.getTextWidth(fnt20, lang_lines.Back)--Back
         label2 = Font.getTextWidth(fnt20, lang_lines.Select)--Select
 
-        Graphics.drawImage(900-label1, 510, btnO)
-        Font.print(fnt20, 900+28-label1, 508, lang_lines.Back, white)--Back
 
-        Graphics.drawImage(900-(btnMargin * 2)-label1-label2, 510, btnX)
-        Font.print(fnt20, 900+28-(btnMargin * 2)-label1-label2, 508, lang_lines.Select, white)--Select
 
-        Graphics.fillRect(60, 900, 34, 460, darkalpha)
 
-        Font.print(fnt22, setting_x, setting_yh, lang_lines.Edit_collection_visibility, white)
-        Graphics.fillRect(60, 900, 78, 81, white)
 
         if #visible_collection_options == 0 then
             visible_collection_selected = 1
@@ -22650,7 +23045,7 @@ while true do
         elseif menuY > visible_collection_maxVisibleItems - 1 then
             menuY = visible_collection_maxVisibleItems - 1
         end
-        Graphics.fillRect(60, 900, 82 + (menuY * 47), 129 + (menuY * 47), themeCol)
+        cyberMenuUI.begin(lang_lines.Edit_collection_visibility, { footer = { { text = lang_lines.Back, icon = btnO }, { text = lang_lines.Select, icon = btnX } } })
 
         if #visible_collection_options == 0 then
             Font.print(fnt22, setting_x, setting_y0, lang_lines.No_collections, white_opaque)
@@ -22668,13 +23063,15 @@ while true do
                             icon = category_visibility_checked
                             color = white
                         end
-                        Graphics.drawImage(setting_x, visible_collection_y, icon, color)
+                        Graphics.drawImage(setting_x, visible_collection_y - 4, icon, color)
                         Font.print(fnt22, setting_x_icon_offset, visible_collection_y, collection_option.display_name, color)
                     end
-                    visible_collection_y = visible_collection_y + 47
+                    visible_collection_y = visible_collection_y + cyberMenuUI.rowPitch
                 end
             end
         end
+
+        cyberMenuUI.restore()
 
         menuItems = 0
 
@@ -22719,72 +23116,89 @@ while true do
         end
 
 
+-- MENU 31 - CYBERPUNK THEMES
+    elseif showMenu == 31 then
+
+        cyberMenuUI.drawThemeMenu()
+        menuItems = 0
+
+        status = System.getMessageState()
+        if status ~= RUNNING then
+            if (Controls.check(pad, SCE_CTRL_CROSS_MAP) and not Controls.check(oldpad, SCE_CTRL_CROSS_MAP)) then
+                if selectedCyberpunkTheme ~= previewCyberpunkTheme then
+                    selectedCyberpunkTheme = previewCyberpunkTheme
+                    restart_after_frame = true
+                    SaveSettings()
+                end
+            elseif (Controls.check(pad, SCE_CTRL_UP)) and not (Controls.check(oldpad, SCE_CTRL_UP)) then
+                if previewCyberpunkTheme > 0 then
+                    previewCyberpunkTheme = previewCyberpunkTheme - 1
+                else
+                    previewCyberpunkTheme = cyberpunkThemeCount
+                end
+            elseif (Controls.check(pad, SCE_CTRL_DOWN)) and not (Controls.check(oldpad, SCE_CTRL_DOWN)) then
+                if previewCyberpunkTheme < cyberpunkThemeCount then
+                    previewCyberpunkTheme = previewCyberpunkTheme + 1
+                else
+                    previewCyberpunkTheme = 0
+                end
+            end
+        end
+
+
 -- MENU 26 - COLLECTION CUSTOM SORT ORDER
     elseif showMenu == 26 then
-        
-        -- SETTINGS
-        -- Footer buttons and icons
-        -- Get text widths for positioning
-        label1 = Font.getTextWidth(fnt20, lang_lines.Close)--Close
-        label2 = Font.getTextWidth(fnt20, lang_lines.Default)--Default
-        label3 = Font.getTextWidth(fnt20, lang_lines.Select)--Select
-
-        Graphics.drawImage(900-label1, 510, btnO)
-        Font.print(fnt20, 900+28-label1, 508, lang_lines.Close, white)--Close
-
-        Graphics.drawImage(900-(btnMargin * 2)-label1-label2, 510, btnT)
-        Font.print(fnt20, 900+28-(btnMargin * 2)-label1-label2, 508, lang_lines.Default, white)--Default (Reset)
-
-        Graphics.drawImage(900-(btnMargin * 4)-label1-label2-label3, 510, btnX)
-        Font.print(fnt20, 900+28-(btnMargin * 4)-label1-label2-label3, 508, lang_lines.Select, white)--Select
-
-        
-        Graphics.fillRect(60, 900, 34, 460, darkalpha)
-
-        Font.print(fnt22, setting_x, setting_yh, collection_files[xcollection_number].display_name, white)--Name of collection
-        Graphics.fillRect(60, 900, 78, 81, white)
-
 
             function cc_drawList()
                 Screen.clear(black)
-                
+
                 -- Calculate the start and end indices for the visible items
                 local startIdx = math.max(1, cc_scrollPosition + 1)
                 local endIdx = math.min(#xCollectionEditTableLookup(), cc_scrollPosition + cc_maxVisibleItems)
 
+                local savedMenuY = menuY
+                menuY = math.max(0, math.min(cc_maxVisibleItems - 1, cc_selected - startIdx))
+                cyberMenuUI.begin(collection_files[xcollection_number].display_name, { footer = {
+                    { text = lang_lines.Close, icon = btnO },
+                    { text = lang_lines.Default, icon = btnT },
+                    { text = lang_lines.Select, icon = btnX },
+                } })
+
                 -- Draw the visible items
                 for i = startIdx, endIdx do
                     local collection_item = xCollectionEditTableLookup()[i]
-                    local yPosition = setting_y0 + ((i - startIdx) * 47)
+                    local yPosition = cyberMenuUI.rowY(i - startIdx)
                     if cc_edit_mode == true then
                         color = white_opaque
                     else
                         color = white
                     end
                     if i == cc_selected then
-                        Graphics.fillRect(60, 900, yPosition - 10, yPosition + 38, themeCol)-- selection
-                        color = white  -- Highlight selected item in white
+                        color = white  -- Highlight selected item
                     end
+                    local iconX = cyberMenuUI.panelRight - 60
                     if cc_edit_mode == true and i == cc_selected and i < #xCollectionEditTableLookup() and i > 1 then
-                        Graphics.drawImage(13, yPosition, setting_icon_sort)
+                        Graphics.drawImage(iconX, yPosition - 4, setting_icon_sort)
                     end
                     if cc_edit_mode == true and i == cc_selected and i == #xCollectionEditTableLookup() then
-                        Graphics.drawImage(13, yPosition, setting_icon_sort_up)
+                        Graphics.drawImage(iconX, yPosition - 4, setting_icon_sort_up)
                     end
                     if cc_edit_mode == true and i == cc_selected and i == 1 then
-                        Graphics.drawImage(13, yPosition, setting_icon_sort_down)
+                        Graphics.drawImage(iconX, yPosition - 4, setting_icon_sort_down)
                     end
 
                     if collection_item then
                         Font.print(fnt22, setting_x, yPosition, collection_item.apptitle or collection_item.name or "", color)
                     end
                 end
+
+                cyberMenuUI.restore()
+                menuY = savedMenuY
                 Screen.flip()
             end
 
             cc_drawList()  -- Draw the game list
 
-    
 
         -- MENU 26 - FUNCTIONS
         status = System.getMessageState()
@@ -23086,35 +23500,10 @@ while true do
         -- Calculate vertical centre
             vertically_centre_mini_menu(menuItems)
 
-        -- GRAPHIC SETUP
-        
-            -- Apply mini menu margins
-            local setting_x = setting_x + mini_menu_x_margin
-
-            -- Draw black overlay
-            Graphics.fillRect(0, 960, 0, 540, blackalpha)
-
-            -- Draw footer
-            Graphics.fillRect(0, 960, 496, 544, themeCol)
-
-            Graphics.drawImage(900-label1, 510, btnO)
-            Font.print(fnt20, 900+28-label1, 508, lang_lines.Close, white)--Close
-
-            Graphics.drawImage(900-(btnMargin * 2)-label1-label2, 510, btnX)
-            Font.print(fnt20, 900+28-(btnMargin * 2)-label1-label2, 508, lang_lines.Select, white)--Select
-            
-            -- Draw dark overlay
-            Graphics.fillRect(60 + mini_menu_x_margin, 900 - mini_menu_x_margin, y_centre_top_margin, y_centre_top_margin + y_centre_box_height, dark)
-
-            -- Draw white line
-            Graphics.fillRect(60 + mini_menu_x_margin, 900 - mini_menu_x_margin, y_centre_white_line_start, y_centre_white_line_start + 3, white)
-            
-            -- Draw selection
-            Graphics.fillRect(60 + mini_menu_x_margin, 900 - mini_menu_x_margin, y_centre_selection_start + (menuY * 47), y_centre_selection_end + (menuY * 47), themeCol)-- selection
+        cyberMenuUI.begin(lang_lines.Emulator_core)
 
 
         -- MENU 21 / Heading
-        Font.print(fnt22, setting_x, setting_yh + y_centre_text_offset, lang_lines.Emulator_core, white)--Emulator core
 
         -- MENU 21 / #0 Back
         Font.print(fnt22, setting_x, setting_y0 + y_centre_text_offset, lang_lines.Back_Chevron, white)--Back
@@ -23129,7 +23518,7 @@ while true do
 
         -- Menu
         -- Get global core name
-        local setting_x_core = 360
+        local setting_x_core = setting_x_offset
         local global_core_name = core_overrides[apptype] and get_core_option_display_name(core_overrides[apptype][0]) or ""
         if game_core >= 1 and core_overrides[apptype] and core_overrides[apptype][game_core] then
             Font.print(fnt22, setting_x_core, setting_y1 + y_centre_text_offset, "<  " .. get_core_option_display_name(core_overrides[apptype][game_core]) .. "  >", white)
@@ -23144,6 +23533,8 @@ while true do
         Font.print(fnt22, setting_x, setting_y3 + y_centre_text_offset, lang_lines.Save, white)--Save
 
         
+        cyberMenuUI.restore()
+
         -- MENU 27 - FUNCTIONS
         status = System.getMessageState()
         if status ~= RUNNING then
@@ -23282,18 +23673,11 @@ while true do
         label1 = Font.getTextWidth(fnt20, lang_lines.Close)--Close
         label2 = Font.getTextWidth(fnt20, lang_lines.Select)--Select
 
-        Graphics.drawImage(900-label1, 510, btnO)
-        Font.print(fnt20, 900+28-label1, 508, lang_lines.Close, white)--Close
 
-        Graphics.drawImage(900-(btnMargin * 2)-label1-label2, 510, btnX)
-        Font.print(fnt20, 900+28-(btnMargin * 2)-label1-label2, 508, lang_lines.Select, white)--Select
 
-        Graphics.fillRect(60, 900, 34, 460, darkalpha)
 
-        Font.print(fnt22, setting_x, setting_yh, lang_lines.Global_core_settings, white)--Global core settings
-        Graphics.fillRect(60, 900, 78, 81, white)
 
-        Graphics.fillRect(60, 900, 82 + (menuY * 47), 129 + (menuY * 47), themeCol)-- selection
+        cyberMenuUI.begin(lang_lines.Global_core_settings)
 
 
         menuItems = 5
@@ -23330,6 +23714,8 @@ while true do
         Font.print(fnt22, setting_x, setting_y7, lang_lines.Star_Recommended_core, white_opaque)--★ Recommended core
 
         
+
+        cyberMenuUI.restore()
 
         -- MENU 28 - FUNCTIONS
         status = System.getMessageState()
@@ -23419,7 +23805,8 @@ while true do
 -- END OF MENUS
     end
 
-    
+    cyberMenuUI.fxDraw()
+
     -- Terminating rendering phase
     Graphics.termBlend()
     if showMenu == 1 then
@@ -24395,6 +24782,11 @@ while true do
                     visible_collection_scrollPosition = 0
                     showMenu = 3
                     menuY=3
+                elseif showMenu == 31 then -- Cyberpunk themes
+                    cyberMenuUI.freeThemeImage()
+                    previewCyberpunkTheme = selectedCyberpunkTheme
+                    showMenu = 2
+                    menuY = 8
                 elseif showMenu == 26 then -- Collection Custom sort order
                     -- showMenu = 24
                     -- menuY=4

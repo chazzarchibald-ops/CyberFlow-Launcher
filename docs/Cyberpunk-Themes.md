@@ -8,7 +8,7 @@ RetroFlow includes selectable color-and-media presets inspired by the Cyberpunk 
 | --- | --- | --- | --- |
 | Classic | Existing RetroFlow color | White | None |
 | Arasaka | `#DC1C2E` | `#FFDCDA` | `ux0:/data/RetroFlow/THEMES/ARASAKA/` |
-| Afterlife | `#A930EC` | `#59F0FF` | `ux0:/data/RetroFlow/THEMES/AFTERLIFE/` |
+| Dogtown | `#00FFC8` | `#FF8C32` | `ux0:/data/RetroFlow/THEMES/DOGTOWN/` |
 | Night City | `#00BEDC` | `#FFCF52` | `ux0:/data/RetroFlow/THEMES/NIGHT_CITY/` |
 | Arasaka Tower | `#C5182C` | `#FFE8E0` | `ux0:/data/RetroFlow/THEMES/ARASAKA_TOWER/` |
 | Ending | `#F1AE30` | `#2AE0E8` | `ux0:/data/RetroFlow/THEMES/ENDING/` |

@@ -1,12 +1,47 @@
 
-# RetroFlow Launcher
+<p align="center"><img src="Media/Logo/logo_cyberflow.png" alt="CyberFlow" width="360"></p>
 
-[![](https://github.com/jimbob4000/RetroFlow-Launcher/raw/main/Media/main_screen.png "main_screen")](https://github.com/jimbob4000/RetroFlow-Launcher/blob/main/Media/main_screen.png)
+# CyberFlow Launcher
 
-<!--- **Project archived:** RetroFlow is no longer in active development. --->
+A Cyberpunk 2077 inspired mod of [RetroFlow Launcher](https://github.com/jimbob4000/RetroFlow-Launcher) (itself an expansion of [HexFlow Launcher](https://github.com/VitaHEX-Games/HexFlow-Launcher)) for the PS Vita. CyberFlow keeps the 3D coverflow and the "no bubbles needed" retro game library of RetroFlow and wraps it in a neon Night City interface: Cyberdeck HUD, Arasaka-style menus, quickhack buttons, and twelve themes drawn from the game.
+
+<p align="center">
+  <img src="Media/Screenshots/start_menu.png" alt="Start menu" width="48%">
+  <img src="Media/Screenshots/game_info.png" alt="Game information screen" width="48%">
+</p>
+<p align="center">
+  <img src="Media/Screenshots/theme_menu.png" alt="Theme menu" width="48%">
+  <img src="Media/Screenshots/help_menu.png" alt="Help menu" width="48%">
+</p>
+
+> The images above are illustrative mock-ups of the interface layout (generated with `Tools/make_mockups.py`) using placeholder game covers, not captures from a Vita.
+
+## CyberFlow features
+
+**Interface**
+* Cyberpunk 2077 HUD styling throughout: Rajdhani font, cyan / red / yellow neon palette, chamfered panels, scan lines and glitch accents.
+* **Cyberdeck RAM** header on the games screen: a segmented RAM bar that fills as you move through your categories.
+* Redesigned **start menu** coverflow with translucent unselected covers, a name band and neon footer bar with round key icons.
+* **Game information screen** rebuilt as a scanner HUD: quickhack-style action buttons (Download cover / Override category) with status pills, a tabbed DATA / CONSOLE window (R1 to switch) and the console's icon.
+* **Settings hub** redesigned in the style of the Arasaka mask selector, with centred sub-menus, a darkened backdrop and the CyberFlow logo.
+* Visual **OFF / ON toggles**, sliders and selector boxes in every settings menu, plus restyled footer key icons.
+* Cyberpunk **Help** menu and an **About** page with the full mod credits.
+* **Futuristic menu animations**: a shutter and scan-line reveal when a menu opens, a glowing sweep wipe when it closes, and a short glitch burst when moving between menus.
+
+**Themes** (Settings > Appearance > Cyberpunk Theme, with live preview and thumbnails)
+* 12 presets plus Classic: Arasaka, Dogtown, Night City, Arasaka Tower, Ending, Johnny Silverhand, Main Theme, Mikoshi, Militech, Alt Cunningham, Just Another Weapon (Phantom Liberty) and Nocturne OP55N1.
+* Each preset sets the interface accent colour, font colour, a themed menu logo and optionally an MP4 background video and looping soundtrack. See [Cyberpunk Theme Presets](docs/Cyberpunk-Themes.md).
+
+**Everything RetroFlow does**
+* No need to create bubbles for games; retro and Sony systems in one launcher.
+* Categories, your own Collections, Favourites and Recently played; hide categories, collections or individual games.
+* Search, rename games, game backgrounds, multiple wallpapers and music tracks.
+* Cover and background downloads, PSP background extraction, CRC matching.
+* Fast startup from cache, file browser for game directories, smooth scrolling, 2D list and side-scrolling views, physical Vita cartridge support.
+* Fully translated (20 languages).
 
 ## About
-RetroFlow Launcher is an expanded version of [HexFlow Launcher](https://github.com/VitaHEX-Games/HexFlow-Launcher); a 3D coverflow-style launcher for PS Vita. 
+CyberFlow is built on RetroFlow Launcher, an expanded version of [HexFlow Launcher](https://github.com/VitaHEX-Games/HexFlow-Launcher); a 3D coverflow-style launcher for PS Vita. 
 
 RetroFlow lets you integrate retro games into a single launcher without the need to create bubbles for each game.
 
@@ -206,6 +241,11 @@ You can change your background within the app by going to Settings > Theme > Cus
 
 # Credits
 
+* CyberFlow Mod created by badmanwazzy37.
+* Credits to CDPROJEKT RED for creating such a breathtaking game, Cyberpunk 2077's legacy will live on forever.
+* Credits to Claude Sonnet 5.5 & Opus 5.5 for making the vision happen.
+* Credits to jimbob4000 & VitaHex for their initial and ongoing work on RetroFlow & HexFlow.
+* Cyberpunk 2077 and related names are the property of CD PROJEKT RED; this is an unofficial fan mod and includes no game assets.
 * Original [HexFlow](https://github.com/VitaHEX-Games/HexFlow-Launcher) app by: VitaHex Games.
 * Programming/UI: Sakis RG.
 * Rinnegatamante and all the contributors to [Lua Player Plus Vita](http://rinnegatamante.github.io/lpp-vita/).

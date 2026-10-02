@@ -1,0 +1,5 @@
+# local build artefacts / tooling
+/Python/
+/src/Python/
+/index.lua
+/cyberflow-final.vpk
