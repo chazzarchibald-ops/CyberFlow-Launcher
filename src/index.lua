@@ -15656,6 +15656,44 @@ function settingsWheelUI.clock()
     PrintCentered(ui.labelFont(), x + w / 2, y + math.floor((h - 20) / 2) - 2, text, ui.timeText, 16)
 end
 
+function settingsWheelUI.toggle(x, y, state)
+    local ui = settingsWheelUI
+    local w, h = 50, 18
+    local toggleBg = Color.new(15, 35, 55, 200)
+    local toggleActive = ui.cyan
+    local labelText = (state == 1 or state == true) and "ON" or "OFF"
+    local labelColor = (state == 1 or state == true) and ui.cyan or ui.red
+
+    drawFillRect(x, x + w, y, y + h, toggleBg)
+    drawHudLine(x, x + w - 1, y, y, ui.red)
+    drawHudLine(x, x + w - 1, y + h - 1, y + h - 1, ui.red)
+    drawHudLine(x, x, y, y + h - 1, ui.red)
+    drawHudLine(x + w - 1, x + w - 1, y, y + h - 1, ui.red)
+
+    if state == 1 or state == true then
+        drawFillRect(x + 2, x + w - 2, y + 2, y + h - 2, Color.new(84, 220, 244, 180))
+    end
+
+    PrintCentered(fnt20, x + w / 2, y + math.floor((h - 18) / 2) - 1, labelText, labelColor, 14)
+end
+
+function settingsWheelUI.slider(x, y, value, width)
+    local ui = settingsWheelUI
+    local h = 20
+    local w = width or 100
+    local bg = Color.new(15, 35, 55, 200)
+
+    drawFillRect(x, x + w, y, y + h, bg)
+    drawHudLine(x, x + w - 1, y, y, ui.red)
+    drawHudLine(x, x + w - 1, y + h - 1, y + h - 1, ui.red)
+    drawHudLine(x, x, y, y + h - 1, ui.red)
+    drawHudLine(x + w - 1, x + w - 1, y, y + h - 1, ui.red)
+
+    Font.print(fnt20, x + 4, y + math.floor((h - 18) / 2) - 1, "<", ui.cyan)
+    PrintCentered(fnt20, x + w / 2, y + math.floor((h - 18) / 2) - 1, tostring(value), ui.cyan, 14)
+    Font.print(fnt20, x + w - 12, y + math.floor((h - 18) / 2) - 1, ">", ui.cyan)
+end
+
 -- Moves the highlight to the nearest option in the pressed direction (dx/dy in screen axes)
 function settingsWheelUI.move(current, dx, dy)
     local from = settingsWheelEntries[current + 1]
@@ -18217,7 +18255,7 @@ while true do
 
         -- MENU 3 / #1 Startup Category
         Font.print(fnt22, setting_x, setting_y1, lang_lines.Startup_Category_colon, white)--Startup Category
-        Font.print(fnt22, setting_x_offset, setting_y1, "<  " .. startup_category_label(startCategory) .. "  >", white)
+        settingsWheelUI.slider(setting_x_offset, setting_y1 - 2, startup_category_label(startCategory), 100)
 
         -- MENU 3 / #2 Visible categories
         Font.print(fnt22, setting_x, setting_y2, lang_lines.Edit_category_visibility, white)
@@ -18230,11 +18268,7 @@ while true do
 
         -- MENU 3 / #5 Show hidden games
         Font.print(fnt22, setting_x, setting_y5, lang_lines.Show_hidden_games_colon, white)--Show hidden games
-        if showHidden == 1 then
-            Font.print(fnt22, setting_x_offset, setting_y5, lang_lines.On, white)--ON
-        else
-            Font.print(fnt22, setting_x_offset, setting_y5, lang_lines.Off, white)--OFF
-        end
+        settingsWheelUI.toggle(setting_x_offset, setting_y5 - 2, showHidden)
 
         cyberMenuUI.restore()
 
@@ -18397,54 +18431,31 @@ while true do
 
         -- MENU 4 / #2 Reflections
         Font.print(fnt22, setting_x, setting_y2, lang_lines.Reflection_Effect_colon, white) -- REFLECTION
-        if setReflections == 1 then
-            Font.print(fnt22, setting_x_offset, setting_y2, lang_lines.On, white)--ON
-        else
-            Font.print(fnt22, setting_x_offset, setting_y2, lang_lines.Off, white)--OFF
-        end
+        settingsWheelUI.toggle(setting_x_offset, setting_y2 - 2, setReflections)
 
         -- MENU 4 / #3 Custom Background
         Font.print(fnt22, setting_x, setting_y3,  lang_lines.Custom_Background_colon, white)
-
-        function wallpaper_print_string (def)
-            if setBackground == (def) then
-                Font.print(fnt22, setting_x_offset, setting_y3, tostring(wallpaper_table_settings[(def)].wallpaper_string), white) --FILENAME
-            end
-        end
-
-        if setBackground == 0 then 
-            Font.print(fnt22, setting_x_offset, setting_y3, lang_lines.Off, white) --OFF
+        if setBackground == 0 then
+            settingsWheelUI.toggle(setting_x_offset, setting_y3 - 2, 0)
         else
-            wallpaper_print_string (setBackground)
+            settingsWheelUI.toggle(setting_x_offset, setting_y3 - 2, 1)
         end
 
         -- MENU 4 / #4 Smooth scrolling
         Font.print(fnt22, setting_x, setting_y4, lang_lines.Smooth_Scrolling_colon, white) -- Smooth scrolling
-        if smoothScrolling == 1 then
-            Font.print(fnt22, setting_x_offset, setting_y4, lang_lines.On, white)--ON
-        else
-            Font.print(fnt22, setting_x_offset, setting_y4, lang_lines.Off, white)--OFF
-        end
+        settingsWheelUI.toggle(setting_x_offset, setting_y4 - 2, smoothScrolling)
 
         -- MENU 4 / #5 2D Views
         Font.print(fnt22, setting_x, setting_y5, lang_lines.Views_2D_colon, white) -- 2D Views:
-        if set2DViews == 1 then
-            Font.print(fnt22, setting_x_offset, setting_y5, lang_lines.On, white)--ON
-        else
-            Font.print(fnt22, setting_x_offset, setting_y5, lang_lines.Off, white)--OFF
-        end
+        settingsWheelUI.toggle(setting_x_offset, setting_y5 - 2, set2DViews)
 
         -- MENU 4 / #6 Change views
         Font.print(fnt22, setting_x, setting_y6, lang_lines.Change_Views_colon, white) -- Change Views:
-        if setChangeViews == 1 then
-            Font.print(fnt22, setting_x_offset, setting_y6, lang_lines.On, white)--ON
-        else
-            Font.print(fnt22, setting_x_offset, setting_y6, lang_lines.Off, white)--OFF
-        end
+        settingsWheelUI.toggle(setting_x_offset, setting_y6 - 2, setChangeViews)
 
         -- MENU 4 / #7 Cyberpunk Theme
         Font.print(fnt22, setting_x, setting_y7, lang_lines.Cyberpunk_Theme_colon or "Cyberpunk Theme: ", white)
-        Font.print(fnt22, setting_x_offset, setting_y7, cyberpunkThemes[previewCyberpunkTheme].name, white)
+        settingsWheelUI.slider(setting_x_offset, setting_y7 - 2, cyberpunkThemes[previewCyberpunkTheme].name, 100)
 
 
         cyberMenuUI.restore()
@@ -18577,36 +18588,21 @@ while true do
         -- MENU 5 / #1 Download artwork
 
         Font.print(fnt22, setting_x, setting_y1, lang_lines.Download_colon, white)
-        if download_artwork_type == 0 then
-            Font.print(fnt22, setting_x_offset, setting_y1, "<  " .. lang_lines.Covers .."  >", white)
-        else
-            Font.print(fnt22, setting_x_offset, setting_y1, "<  " .. lang_lines.Backgrounds .."  >", white)
-        end
+        local artworkType = (download_artwork_type == 0) and lang_lines.Covers or lang_lines.Backgrounds
+        settingsWheelUI.slider(setting_x_offset, setting_y1 - 2, artworkType, 100)
 
 
         -- MENU 5 / #2 CRC Download
         Font.print(fnt22, setting_x, setting_y2, lang_lines.Download_using_CRC_colon, white)--Download using CRC
-        if setCRCScan == 1 then
-            Font.print(fnt22, setting_x_offset, setting_y2, lang_lines.On, white)--ON
-        else
-            Font.print(fnt22, setting_x_offset, setting_y2, lang_lines.Off, white)--OFF
-        end
+        settingsWheelUI.toggle(setting_x_offset, setting_y2 - 2, setCRCScan)
 
         -- MENU 5 / #3 Game Backgrounds
         Font.print(fnt22, setting_x, setting_y3, lang_lines.Game_backgounds_colon, white) -- Game backgounds
-        if Game_Backgrounds == 1 then
-            Font.print(fnt22, setting_x_offset, setting_y3, lang_lines.On, white)--ON
-        else
-            Font.print(fnt22, setting_x_offset, setting_y3, lang_lines.Off, white)--OFF
-        end
+        settingsWheelUI.toggle(setting_x_offset, setting_y3 - 2, Game_Backgrounds)
 
         -- MENU 5 / #4 Extract PSP backgounds
         Font.print(fnt22, setting_x, setting_y4, lang_lines.Extract_PSP_backgrounds, white) -- Extract PSP backgounds
-        if setPSPExtractBG == 1 then
-            Font.print(fnt22, setting_x_offset, setting_y4, lang_lines.On, white)--ON
-        else
-            Font.print(fnt22, setting_x_offset, setting_y4, lang_lines.Off, white)--OFF
-        end
+        settingsWheelUI.toggle(setting_x_offset, setting_y4 - 2, setPSPExtractBG)
 
 
         cyberMenuUI.restore()
@@ -18798,38 +18794,28 @@ while true do
 
         -- MENU 6 / #2 Scan on Startup
         Font.print(fnt22, setting_x, setting_y2, lang_lines.Startup_scan_colon, white)--Scan on startup
-
-        if startupScan == 1 then
-            Font.print(fnt22, setting_x_offset, setting_y2, lang_lines.On, white)--ON
-        else
-            Font.print(fnt22, setting_x_offset, setting_y2, lang_lines.Off, white)--OFF
-        end
+        settingsWheelUI.toggle(setting_x_offset, setting_y2 - 2, startupScan)
 
         -- MENU 6 / #3 Scan cartridges
         Font.print(fnt22, setting_x, setting_y3, lang_lines.Scan_Vita_cartridges_colon, white)--Scan cartridges
-
-        if setScanCartridges == 1 then
-            Font.print(fnt22, setting_x_offset, setting_y3, lang_lines.On, white)--ON
-        else
-            Font.print(fnt22, setting_x_offset, setting_y3, lang_lines.Off, white)--OFF
-        end
+        settingsWheelUI.toggle(setting_x_offset, setting_y3 - 2, setScanCartridges)
 
         -- MENU 6 / #4 Adrenaline_roms
-        Font.print(fnt22, setting_x, setting_y4, lang_lines.Adrenaline_roms, white)--Adrenaline_roms 
+        Font.print(fnt22, setting_x, setting_y4, lang_lines.Adrenaline_roms, white)--Adrenaline_roms
 
+        local adrRom = "ux0"
         if Adrenaline_roms == 1 then
-            Font.print(fnt22, setting_x_offset, setting_y4, "<  " .. "ux0"  .. ":/pspemu" .. "  >", white)
+            adrRom = "ux0"
         elseif Adrenaline_roms == 2 then
-            Font.print(fnt22, setting_x_offset, setting_y4, "<  " .. "ur0"  .. ":/pspemu" .. "  >", white)
+            adrRom = "ur0"
         elseif Adrenaline_roms == 3 then
-            Font.print(fnt22, setting_x_offset, setting_y4, "<  " .. "imc0" .. ":/pspemu" .. "  >", white)
+            adrRom = "imc0"
         elseif Adrenaline_roms == 4 then
-            Font.print(fnt22, setting_x_offset, setting_y4, "<  " .. "xmc0" .. ":/pspemu" .. "  >", white)
+            adrRom = "xmc0"
         elseif Adrenaline_roms == 5 then
-            Font.print(fnt22, setting_x_offset, setting_y4, "<  " .. lang_lines.All .. "  >", white)   
-        else
-            Font.print(fnt22, setting_x_offset, setting_y4, "<  " .. "uma0" .. ":/pspemu" .. "  >", white)
+            adrRom = lang_lines.All
         end
+        settingsWheelUI.slider(setting_x_offset, setting_y4 - 2, adrRom .. ":/pspemu", 120)
 
         -- MENU 6 / #5 Rescan
         Font.print(fnt22, setting_x, setting_y5, lang_lines.Rescan, white)--Rescan
@@ -18929,60 +18915,39 @@ while true do
 
 -- MENU 7 - ABOUT
     elseif showMenu == 7 then
-        
-        -- SETTINGS
-        -- Footer buttons and icons
-        -- Get text widths for positioning
-        label1 = Font.getTextWidth(fnt20, lang_lines.Close)--Close
-        label2 = Font.getTextWidth(fnt20, lang_lines.Select)--Select
 
-        Graphics.drawImage(900-label1, 510, btnO)
-        Font.print(fnt20, 900+28-label1, 508, lang_lines.Close, white)--Close
-
-        Graphics.drawImage(900-(btnMargin * 2)-label1-label2, 510, btnX)
-        Font.print(fnt20, 900+28-(btnMargin * 2)-label1-label2, 508, lang_lines.Select, white)--Select
-
-        Graphics.fillRect(60, 900, 34, 460, darkalpha)
-
-        Font.print(fnt22, setting_x, setting_yh, lang_lines.Help_and_Guides, white)--Help and Guides
-        Graphics.fillRect(60, 900, 78, 81, white)
-
-        Graphics.fillRect(60, 900, 82 + (menuY * 47), 129 + (menuY * 47), themeCol)-- selection
+        cyberMenuUI.begin(lang_lines.Help_and_Guides)
 
         menuItems = 6
-        
+
         -- MENU 7 / #0 Back
         Font.print(fnt22, setting_x, setting_y0, lang_lines.Back_Chevron, white)--Back
-        
+
         -- MENU 7 / #1 Guide 1
-        Graphics.drawImage(setting_x_icon, setting_y1, setting_icon_about)
-        Font.print(fnt22, setting_x_icon_offset, setting_y1, lang_lines.guide_1_heading, white)--Guide 1
+        Font.print(fnt22, setting_x, setting_y1, lang_lines.guide_1_heading, white)--Guide 1
 
         -- MENU 7 / #2 Guide 2
-        Graphics.drawImage(setting_x_icon, setting_y2, setting_icon_about)
-        Font.print(fnt22, setting_x_icon_offset, setting_y2, lang_lines.guide_2_heading, white)--Guide 2
+        Font.print(fnt22, setting_x, setting_y2, lang_lines.guide_2_heading, white)--Guide 2
 
         -- MENU 7 / #3 Guide 3
-        Graphics.drawImage(setting_x_icon, setting_y3, setting_icon_about)
-        Font.print(fnt22, setting_x_icon_offset, setting_y3, lang_lines.guide_3_heading, white)--Guide 3
+        Font.print(fnt22, setting_x, setting_y3, lang_lines.guide_3_heading, white)--Guide 3
 
         -- MENU 7 / #4 Guide 4
-        Graphics.drawImage(setting_x_icon, setting_y4, setting_icon_about)
-        Font.print(fnt22, setting_x_icon_offset, setting_y4, lang_lines.guide_4_heading, white)--Guide 4
+        Font.print(fnt22, setting_x, setting_y4, lang_lines.guide_4_heading, white)--Guide 4
 
         -- MENU 7 / #5 Guide 5
-        Graphics.drawImage(setting_x_icon, setting_y5, setting_icon_about)
-        Font.print(fnt22, setting_x_icon_offset, setting_y5, lang_lines.guide_5_heading, white)--Guide 5
+        Font.print(fnt22, setting_x, setting_y5, lang_lines.guide_5_heading, white)--Guide 5
 
         -- MENU 7 / #6 Guide 6
-        Graphics.drawImage(setting_x_icon, setting_y6, setting_icon_about)
-        Font.print(fnt22, setting_x_icon_offset, setting_y6, lang_lines.guide_6_heading, white)--Guide 6
+        Font.print(fnt22, setting_x, setting_y6, lang_lines.guide_6_heading, white)--Guide 6
 
-        -- Hidden timer        
+        cyberMenuUI.restore()
+
+        -- Hidden timer
         Font.print(fnt20, 10, 508, "Overall load time: " .. (functionTime + oneLoopTime) / 1000 .. " s.  Functions: ".. functionTime / 1000 .. " s.   Main loop: ".. oneLoopTime / 1000 .. " s.", timercolor)
 
 
-        
+
         -- MENU 7 - FUNCTIONS
         status = System.getMessageState()
         if status ~= RUNNING then
@@ -19901,27 +19866,15 @@ while true do
 
         -- MENU 12 / #1 SOUNDS
         Font.print(fnt22, setting_x, setting_y1, lang_lines.Sounds_colon, white)--SOUNDS
-        if setSounds == 1 then
-            Font.print(fnt22, setting_x_offset, setting_y1, lang_lines.On, white)--ON
-        else
-            Font.print(fnt22, setting_x_offset, setting_y1, lang_lines.Off, white)--OFF
-        end
+        settingsWheelUI.toggle(setting_x_offset, setting_y1 - 2, setSounds)
 
         -- MENU 12 / #2 MUSIC
         Font.print(fnt22, setting_x, setting_y2, lang_lines.Music_colon, white)--MUSIC
-        if setMusic == 1 then
-            Font.print(fnt22, setting_x_offset, setting_y2, lang_lines.On, white)--ON
-        else
-            Font.print(fnt22, setting_x_offset, setting_y2, lang_lines.Off, white)--OFF
-        end
+        settingsWheelUI.toggle(setting_x_offset, setting_y2 - 2, setMusic)
 
         -- MENU 12 / #3 SHUFFLE MUSIC
         Font.print(fnt22, setting_x, setting_y3, lang_lines.Shuffle_music_colon, white)--SHUFFLE MUSIC
-        if setMusicShuffle == 1 then
-            Font.print(fnt22, setting_x_offset, setting_y3, lang_lines.On, white)--ON
-        else
-            Font.print(fnt22, setting_x_offset, setting_y3, lang_lines.Off, white)--OFF
-        end
+        settingsWheelUI.toggle(setting_x_offset, setting_y3 - 2, setMusicShuffle)
 
         -- MENU 12 / #4 SKIP TRACK
         if #music_sequential > 1 then
@@ -20313,45 +20266,32 @@ while true do
 
         -- MENU 19 / #1 Remap X and O buttons
         Font.print(fnt22, setting_x, setting_y1,  lang_lines.Swap_X_and_O_buttons_colon, white)
-        if setSwap_X_O_buttons == 1 then
-            Font.print(fnt22, setting_x_offset, setting_y1, lang_lines.On, white)--ON
-        else
-            Font.print(fnt22, setting_x_offset, setting_y1, lang_lines.Off, white)--OFF
-        end
+        settingsWheelUI.toggle(setting_x_offset, setting_y1 - 2, setSwap_X_O_buttons)
 
         -- MENU 19 / #2 Adrenaline PS Button
         Font.print(fnt22, setting_x, setting_y2, lang_lines.Adrenaline_PS_button_colon, white)--Adrenaline PS Button
+        local adrButton = lang_lines.Menu
         if setAdrPSButton == 0 then
-            Font.print(fnt22, setting_x_offset, setting_y2, lang_lines.Menu, white)--Menu
+            adrButton = lang_lines.Menu
         elseif setAdrPSButton == 1 then
-            Font.print(fnt22, setting_x_offset, setting_y2, lang_lines.LiveArea, white)--LiveArea
+            adrButton = lang_lines.LiveArea
         elseif setAdrPSButton == 2 then
-            Font.print(fnt22, setting_x_offset, setting_y2, lang_lines.Standard, white)--Standard
+            adrButton = lang_lines.Standard
         end
+        settingsWheelUI.slider(setting_x_offset, setting_y2 - 2, adrButton, 100)
 
         -- MENU 19 / #3 Show missing covers
         Font.print(fnt22, setting_x, setting_y3,  lang_lines.Show_missing_covers_colon, white)
-        if showMissingCovers == 1 then
-            Font.print(fnt22, setting_x_offset, setting_y3, lang_lines.On, white)--ON
-        else
-            Font.print(fnt22, setting_x_offset, setting_y3, lang_lines.Off, white)--OFF
-        end
+        settingsWheelUI.toggle(setting_x_offset, setting_y3 - 2, showMissingCovers)
 
         -- MENU 19 / #4 Show core override menu
         Font.print(fnt22, setting_x, setting_y4, lang_lines.Show_game_core_menu_colon, white)--Show core override menu:
-        if setShowCores == 1 then
-            Font.print(fnt22, setting_x_offset, setting_y4, lang_lines.On, white)--ON
-        else
-            Font.print(fnt22, setting_x_offset, setting_y4, lang_lines.Off, white)--OFF
-        end
+        settingsWheelUI.toggle(setting_x_offset, setting_y4 - 2, setShowCores)
 
         -- MENU 19 / #5 Time
         Font.print(fnt22, setting_x, setting_y5, lang_lines.Time_colon, white)--Time
-        if setTime == 1 then
-            Font.print(fnt22, setting_x_offset, setting_y5, lang_lines.Time_12hr, white)--24-Hour Clock
-        else
-            Font.print(fnt22, setting_x_offset, setting_y5, lang_lines.Time_24hr, white)--12-Hour Clock
-        end
+        local timeFormat = (setTime == 1) and lang_lines.Time_12hr or lang_lines.Time_24hr
+        settingsWheelUI.slider(setting_x_offset, setting_y5 - 2, timeFormat, 100)
 
         -- MENU 19 / #6 Global core settings
         Font.print(fnt22, setting_x, setting_y6, lang_lines.Global_core_settings, white)--Global core settings
