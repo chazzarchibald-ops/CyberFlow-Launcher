@@ -10,11 +10,13 @@ A Cyberpunk 2077 inspired mod of [RetroFlow Launcher](https://github.com/jimbob4
   <img src="Media/Screenshots/game_info.png" alt="Game information screen" width="48%">
 </p>
 <p align="center">
+  <img src="Media/Screenshots/settings_menu.png" alt="Settings hub" width="48%">
+  <img src="Media/Screenshots/scan_settings.png" alt="Scan settings menu" width="48%">
+</p>
+<p align="center">
   <img src="Media/Screenshots/theme_menu.png" alt="Theme menu" width="48%">
-  <img src="Media/Screenshots/help_menu.png" alt="Help menu" width="48%">
 </p>
 
-> The images above are illustrative mock-ups of the interface layout (generated with `Tools/make_mockups.py`) using placeholder game covers, not captures from a Vita.
 
 ## CyberFlow features
 
@@ -25,7 +27,7 @@ A Cyberpunk 2077 inspired mod of [RetroFlow Launcher](https://github.com/jimbob4
 * **Game information screen** rebuilt as a scanner HUD: quickhack-style action buttons (Download cover / Override category) with status pills, a tabbed DATA / CONSOLE window (R1 to switch) and the console's icon.
 * **Settings hub** redesigned in the style of the Arasaka mask selector, with centred sub-menus, a darkened backdrop and the CyberFlow logo.
 * Visual **OFF / ON toggles**, sliders and selector boxes in every settings menu, plus restyled footer key icons.
-* Cyberpunk **Help** menu and an **About** page with the full mod credits.
+* Cyberpunk **Help** menu and an **About** page with the full CyberFlow and original RetroFlow credits (scroll with the right stick).
 * **Futuristic menu animations**: a shutter and scan-line reveal when a menu opens, a glowing sweep wipe when it closes, and a short glitch burst when moving between menus.
 
 **Themes** (Settings > Appearance > Cyberpunk Theme, with live preview and thumbnails)

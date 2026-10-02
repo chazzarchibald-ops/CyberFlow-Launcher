@@ -20851,22 +20851,83 @@ while true do
         -- MENU 18 / #1 Content
         Font.print(fnt22, setting_x, setting_y1, "CyberFlow Launcher (RetroFlow " .. appversion .. ")", white)-- Guide 6 Content
 
-        local cyberflowCredits = "CyberFlow Mod created by badmanwazzy37.\n\n" ..
-            "Credits to CDPROJEKT RED for creating such a breathtaking game, Cyberpunk 2077's legacy will live on forever.\n\n" ..
-            "Credits to Claude Sonnet 5.5 & Opus 5.5 for making the vision happen.\n\n" ..
-            "Credits to jimbob4000 & VitaHex for their initial and ongoing work on RetroFlow & HexFlow."
-        Font.print(fnt22, setting_x, setting_y2, wraptextlength(cyberflowCredits, 60), cyberMenuUI.bodyText)-- Guide 6 Content
+        if cyberMenuUI.aboutLines == nil then
+            local aboutCredits = "CyberFlow Mod created by badmanwazzy37.\n\n" ..
+                "Credits to CDPROJEKT RED for creating such a breathtaking game, Cyberpunk 2077's legacy will live on forever.\n\n" ..
+                "Credits to Claude Sonnet 5.5 & Opus 5.5 for making the vision happen.\n\n" ..
+                "Credits to jimbob4000 & VitaHex for their initial and ongoing work on RetroFlow & HexFlow.\n\n" ..
+                "ORIGINAL RETROFLOW CREDITS\n\n" ..
+                "RetroFlow by jimbob4000 is a modified version of the HexFlow app.\n\n" ..
+                "The original HexFlow app is by VitaHex. Support VitaHex's projects on patreon.com/vitahex\n\n" ..
+                "Programming/UI: Sakis RG.\n\n" ..
+                "Rinnegatamante and all the contributors to Lua Player Plus Vita.\n\n" ..
+                "cy33hc for vita launcher and copyicons, his work has been inspiring.\n\n" ..
+                "Aurora wallpaper: Photo by Maria Vojtovicova.\n\n" ..
+                "Blur 2 and Blur 3 wallpaper by Tech & ALL.\n\n" ..
+                "SPECIAL THANKS\n\n" ..
+                "Creckeryop\n" ..
+                "andiweli: HEXFlow Covers database\n" ..
+                "DRok17: for his work on bubble builders.\n" ..
+                "Rinnegatamante: for tips and support with Lua.\n" ..
+                "Leecherman: AdrBubbleBooter and the PSP ISO Renamer\n" ..
+                "BlackSheepBoy69: for sharing tips and code from HexFlow Launcher Unofficial Custom\n\n" ..
+                "For more information and full credits, please visit:\n" ..
+                "https://github.com/jimbob4000/RetroFlow-Launcher"
+            cyberMenuUI.aboutLines = {}
+            for line in (wraptextlength(aboutCredits, 60) .. "\n"):gmatch("(.-)\n") do
+                table.insert(cyberMenuUI.aboutLines, line)
+            end
+            cyberMenuUI.aboutScroll = 0
+            cyberMenuUI.aboutHold = 0
+        end
+
+        -- The right stick scrolls the credits when they don't fit on screen
+        local aboutRows = 12
+        local aboutMax = math.max(0, #cyberMenuUI.aboutLines - aboutRows)
+        local rsx, rsy = Controls.readRightAnalog()
+        if rsy < 64 or rsy > 180 then
+            cyberMenuUI.aboutHold = cyberMenuUI.aboutHold - 1
+            if cyberMenuUI.aboutHold <= 0 then
+                cyberMenuUI.aboutScroll = cyberMenuUI.aboutScroll + (rsy > 180 and 1 or -1)
+                cyberMenuUI.aboutHold = (rsy < 24 or rsy > 232) and 3 or 6
+            end
+        else
+            cyberMenuUI.aboutHold = 0
+        end
+        cyberMenuUI.aboutScroll = math.max(0, math.min(aboutMax, cyberMenuUI.aboutScroll))
+
+        for row = 1, aboutRows do
+            local aboutLine = cyberMenuUI.aboutLines[cyberMenuUI.aboutScroll + row]
+            if aboutLine ~= nil and aboutLine ~= "" then
+                local aboutColor = cyberMenuUI.bodyText
+                if aboutLine == "ORIGINAL RETROFLOW CREDITS" or aboutLine == "SPECIAL THANKS" then
+                    aboutColor = cyberMenuUI.cyan
+                end
+                Font.print(fnt22, setting_x, setting_y2 + (row - 1) * 22, aboutLine, aboutColor)
+            end
+        end
+
+        if aboutMax > 0 then
+            local trackTop = setting_y2 - 2
+            local trackH = aboutRows * 22
+            local thumbH = math.max(20, math.floor(trackH * aboutRows / #cyberMenuUI.aboutLines))
+            local thumbY = trackTop + math.floor((trackH - thumbH) * cyberMenuUI.aboutScroll / aboutMax)
+            drawFillRect(cyberMenuUI.panelRight - 14, cyberMenuUI.panelRight - 12, trackTop, trackTop + trackH, cyberMenuUI.cyanDim)
+            drawFillRect(cyberMenuUI.panelRight - 15, cyberMenuUI.panelRight - 11, thumbY, thumbY + thumbH, cyberMenuUI.cyan)
+            Font.print(fnt20, 218, 508, "Right stick: Scroll", cyberMenuUI.cyanDim)
+        end
 
         cyberMenuUI.restore()
 
         -- MENU 18 - FUNCTIONS
         status = System.getMessageState()
         if status ~= RUNNING then
-            
+
             if (Controls.check(pad, SCE_CTRL_CROSS_MAP) and not Controls.check(oldpad, SCE_CTRL_CROSS_MAP)) then
 
                 -- MENU 18 / #0 Back
                 if menuY == 0 then -- #0 Back
+                    cyberMenuUI.aboutScroll = 0
                     showMenu = 7 -- About
                     menuY = 6 -- Guide 6
                 end
@@ -24741,6 +24802,7 @@ while true do
                     showMenu = 7
                     menuY = 5 -- Guide 5
                 elseif showMenu == 18 then -- About - Guide 6
+                    cyberMenuUI.aboutScroll = 0
                     showMenu = 7
                     menuY = 6 -- Guide 6
                 elseif showMenu == 19 then -- Other Settings
