@@ -15658,23 +15658,29 @@ end
 
 function settingsWheelUI.toggle(x, y, state)
     local ui = settingsWheelUI
-    local w, h = 50, 18
-    local toggleBg = Color.new(15, 35, 55, 200)
-    local toggleActive = ui.cyan
-    local labelText = (state == 1 or state == true) and "ON" or "OFF"
-    local labelColor = (state == 1 or state == true) and ui.cyan or ui.red
+    local boxW, boxH = 38, 22
+    local gap = 2
+    local offX = x
+    local onX = x + boxW + gap
 
-    drawFillRect(x, x + w, y, y + h, toggleBg)
-    drawHudLine(x, x + w - 1, y, y, ui.red)
-    drawHudLine(x, x + w - 1, y + h - 1, y + h - 1, ui.red)
-    drawHudLine(x, x, y, y + h - 1, ui.red)
-    drawHudLine(x + w - 1, x + w - 1, y, y + h - 1, ui.red)
+    local offFill = (state == 0 or state == false) and ui.cyan or ui.red
+    local onFill = (state == 1 or state == true) and ui.cyan or ui.red
+    local offBg = (state == 0 or state == false) and Color.new(40, 140, 180, 150) or Color.new(15, 35, 55, 200)
+    local onBg = (state == 1 or state == true) and Color.new(40, 140, 180, 150) or Color.new(15, 35, 55, 200)
 
-    if state == 1 or state == true then
-        drawFillRect(x + 2, x + w - 2, y + 2, y + h - 2, Color.new(84, 220, 244, 180))
-    end
+    drawFillRect(offX, offX + boxW, y, y + boxH, offBg)
+    drawHudLine(offX, offX + boxW - 1, y, y, offFill)
+    drawHudLine(offX, offX + boxW - 1, y + boxH - 1, y + boxH - 1, offFill)
+    drawHudLine(offX, offX, y, y + boxH - 1, offFill)
+    drawHudLine(offX + boxW - 1, offX + boxW - 1, y, y + boxH - 1, offFill)
+    PrintCentered(fnt20, offX + boxW / 2, y + math.floor((boxH - 18) / 2), "OFF", ui.cyan, 14)
 
-    PrintCentered(fnt20, x + w / 2, y + math.floor((h - 18) / 2) - 1, labelText, labelColor, 14)
+    drawFillRect(onX, onX + boxW, y, y + boxH, onBg)
+    drawHudLine(onX, onX + boxW - 1, y, y, onFill)
+    drawHudLine(onX, onX + boxW - 1, y + boxH - 1, y + boxH - 1, onFill)
+    drawHudLine(onX, onX, y, y + boxH - 1, onFill)
+    drawHudLine(onX + boxW - 1, onX + boxW - 1, y, y + boxH - 1, onFill)
+    PrintCentered(fnt20, onX + boxW / 2, y + math.floor((boxH - 18) / 2), "ON", ui.cyan, 14)
 end
 
 function settingsWheelUI.slider(x, y, value, width)
