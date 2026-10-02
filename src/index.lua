@@ -4805,6 +4805,8 @@ function Swap_X_O_buttons()
         -- Swap images
         btnO = Graphics.loadImage("app0:/DATA/x.png")
         btnX = Graphics.loadImage("app0:/DATA/o.png")
+        btnO_symbol = "cross"
+        btnX_symbol = "circle"
     else 
         -- Swap buttons is - Off
 
@@ -4815,6 +4817,8 @@ function Swap_X_O_buttons()
         -- Swap images
         btnX = Graphics.loadImage("app0:/DATA/x.png")
         btnO = Graphics.loadImage("app0:/DATA/o.png")
+        btnX_symbol = "cross"
+        btnO_symbol = "circle"
     end
 end
 Swap_X_O_buttons()
@@ -15656,48 +15660,79 @@ function settingsWheelUI.clock()
     PrintCentered(ui.labelFont(), x + w / 2, y + math.floor((h - 20) / 2) - 2, text, ui.timeText, 16)
 end
 
-function settingsWheelUI.toggle(x, y, state)
+-- Key cap used for every footer control hint; same outline box as the R1 tab hint on the info screen
+function settingsWheelUI.keyIcon(x, y, symbol)
     local ui = settingsWheelUI
-    local boxW, boxH = 38, 22
-    local gap = 2
-    local offX = x
-    local onX = x + boxW + gap
+    if ui.keyLine == nil then
+        ui.keyLine = Color.new(84, 220, 244, 245)
+        ui.keyBody = Color.new(6, 18, 30, 235)
+        ui.circlePoints = {}
+        for i = 0, 15 do
+            local angle = i * math.pi / 8
+            ui.circlePoints[i] = { math.floor(math.cos(angle) * 4.5 + 0.5), math.floor(math.sin(angle) * 4.5 + 0.5) }
+        end
+    end
+    local line = ui.keyLine
+    local bx, by = x - 2, y + 2
+    drawFillRect(bx, bx + 24, by, by + 15, ui.keyBody)
+    drawHudLine(bx, bx + 24, by, by, line)
+    drawHudLine(bx, bx + 24, by + 15, by + 15, line)
+    drawHudLine(bx, bx, by, by + 15, line)
+    drawHudLine(bx + 24, bx + 24, by, by + 15, line)
 
-    local offFill = (state == 0 or state == false) and ui.cyan or ui.red
-    local onFill = (state == 1 or state == true) and ui.cyan or ui.red
-    local offBg = (state == 0 or state == false) and Color.new(40, 140, 180, 150) or Color.new(15, 35, 55, 200)
-    local onBg = (state == 1 or state == true) and Color.new(40, 140, 180, 150) or Color.new(15, 35, 55, 200)
-
-    drawFillRect(offX, offX + boxW, y, y + boxH, offBg)
-    drawHudLine(offX, offX + boxW - 1, y, y, offFill)
-    drawHudLine(offX, offX + boxW - 1, y + boxH - 1, y + boxH - 1, offFill)
-    drawHudLine(offX, offX, y, y + boxH - 1, offFill)
-    drawHudLine(offX + boxW - 1, offX + boxW - 1, y, y + boxH - 1, offFill)
-    PrintCentered(fnt20, offX + boxW / 2, y + math.floor((boxH - 18) / 2), "OFF", ui.cyan, 14)
-
-    drawFillRect(onX, onX + boxW, y, y + boxH, onBg)
-    drawHudLine(onX, onX + boxW - 1, y, y, onFill)
-    drawHudLine(onX, onX + boxW - 1, y + boxH - 1, y + boxH - 1, onFill)
-    drawHudLine(onX, onX, y, y + boxH - 1, onFill)
-    drawHudLine(onX + boxW - 1, onX + boxW - 1, y, y + boxH - 1, onFill)
-    PrintCentered(fnt20, onX + boxW / 2, y + math.floor((boxH - 18) / 2), "ON", ui.cyan, 14)
+    local cx, cy = bx + 12, by + 8
+    if symbol == "cross" then
+        for shift = 0, 1 do
+            drawHudLine(cx - 4 + shift, cx + 4 + shift, cy - 4, cy + 4, line)
+            drawHudLine(cx - 4 + shift, cx + 4 + shift, cy + 4, cy - 4, line)
+        end
+    elseif symbol == "circle" then
+        for i = 0, 15 do
+            local p1 = ui.circlePoints[i]
+            local p2 = ui.circlePoints[(i + 1) % 16]
+            drawHudLine(cx + p1[1], cx + p2[1], cy + p1[2], cy + p2[2], line)
+            drawHudLine(cx + p1[1] + 1, cx + p2[1] + 1, cy + p1[2], cy + p2[2], line)
+        end
+    elseif symbol == "triangle" then
+        for shift = 0, 1 do
+            drawHudLine(cx + shift, cx - 5 + shift, cy - 5, cy + 4, line)
+            drawHudLine(cx + shift, cx + 5 + shift, cy - 5, cy + 4, line)
+        end
+        drawHudLine(cx - 5, cx + 5, cy + 4, cy + 4, line)
+        drawHudLine(cx - 5, cx + 5, cy + 5, cy + 5, line)
+    elseif symbol == "square" then
+        drawHudLine(cx - 4, cx + 4, cy - 4, cy - 4, line)
+        drawHudLine(cx - 4, cx + 4, cy + 4, cy + 4, line)
+        drawHudLine(cx - 4, cx - 4, cy - 4, cy + 4, line)
+        drawHudLine(cx + 4, cx + 4, cy - 4, cy + 4, line)
+        drawHudLine(cx - 3, cx + 3, cy - 3, cy - 3, line)
+        drawHudLine(cx - 3, cx + 3, cy + 3, cy + 3, line)
+    end
 end
 
-function settingsWheelUI.slider(x, y, value, width)
-    local ui = settingsWheelUI
-    local h = 20
-    local w = width or 100
-    local bg = Color.new(15, 35, 55, 200)
-
-    drawFillRect(x, x + w, y, y + h, bg)
-    drawHudLine(x, x + w - 1, y, y, ui.red)
-    drawHudLine(x, x + w - 1, y + h - 1, y + h - 1, ui.red)
-    drawHudLine(x, x, y, y + h - 1, ui.red)
-    drawHudLine(x + w - 1, x + w - 1, y, y + h - 1, ui.red)
-
-    Font.print(fnt20, x + 4, y + math.floor((h - 18) / 2) - 1, "<", ui.cyan)
-    PrintCentered(fnt20, x + w / 2, y + math.floor((h - 18) / 2) - 1, tostring(value), ui.cyan, 14)
-    Font.print(fnt20, x + w - 12, y + math.floor((h - 18) / 2) - 1, ">", ui.cyan)
+-- Every footer in the app draws its control hints with Graphics.drawImage(x, y, btnX/btnO/btnT/btnS);
+-- redirect those to the key cap so all screens share one style.
+if rawDrawImage == nil then
+    rawDrawImage = Graphics.drawImage
+end
+Graphics.drawImage = function(x, y, image, ...)
+    if image ~= nil then
+        local symbol = nil
+        if image == btnX then
+            symbol = btnX_symbol
+        elseif image == btnO then
+            symbol = btnO_symbol
+        elseif image == btnT then
+            symbol = "triangle"
+        elseif image == btnS then
+            symbol = "square"
+        end
+        if symbol ~= nil then
+            settingsWheelUI.keyIcon(x, y, symbol)
+            return
+        end
+    end
+    return rawDrawImage(x, y, image, ...)
 end
 
 -- Moves the highlight to the nearest option in the pressed direction (dx/dy in screen axes)
@@ -16052,12 +16087,13 @@ local cyberMenuUI = {
     logo = nil,
     logoFailed = false,
     strips = nil,
-    panelLeft = 44,
-    panelRight = 424,
+    panelLeft = 190,
+    panelRight = 770,
     rowTop = 156,
     rowPitch = 36,
-    textX = 62,
-    valueX = 250,
+    textX = 218,
+    controlW = 190,
+    valueX = 528,
     itemText = Color.new(232, 70, 70, 255),
     selectedText = Color.new(92, 228, 244, 255),
     cyan = Color.new(92, 228, 244, 240),
@@ -16109,11 +16145,11 @@ function cyberMenuUI.panel(title)
         end
     end
     if ui.logo ~= nil then
-        Graphics.drawImage(ui.panelLeft + 12, 8, ui.logo)
+        Graphics.drawImage(ui.panelLeft + math.floor((ui.panelRight - ui.panelLeft - Graphics.getImageWidth(ui.logo)) / 2), 8, ui.logo)
     end
 
     local titleFont = cyberInfoUI.font(16)
-    Font.print(titleFont, ui.panelLeft + 18, 116, cyberInfoUI.cleanLabel(title, ""), ui.cyan)
+    Font.print(titleFont, ui.textX, 116, cyberInfoUI.cleanLabel(title, ""), ui.cyan)
     drawHudLine(ui.panelLeft + 14, ui.panelRight - 14, 138, 138, ui.cyanDim)
 end
 
@@ -16195,6 +16231,69 @@ function cyberMenuUI.restore()
         _G["setting_y" .. row] = ui.saved.rows[row]
     end
     ui.saved = nil
+end
+
+function cyberMenuUI.sidePress(rows)
+    local row = rows[menuY]
+    if row == nil then
+        return false
+    end
+    local left = Controls.check(pad, SCE_CTRL_LEFT) and not Controls.check(oldpad, SCE_CTRL_LEFT)
+    local right = Controls.check(pad, SCE_CTRL_RIGHT) and not Controls.check(oldpad, SCE_CTRL_RIGHT)
+    if not (left or right) then
+        return false
+    end
+    if row == "right" then
+        return right
+    elseif row == "any" then
+        return true
+    end
+    return (row == true or row == 1) == left
+end
+
+function cyberMenuUI.controlBox(x, y, w, h, active)
+    local ui = cyberMenuUI
+    if ui.boxLine == nil then
+        ui.boxLine = Color.new(214, 58, 70, 240)
+        ui.boxBody = Color.new(14, 26, 42, 215)
+        ui.boxActiveBody = Color.new(34, 150, 186, 235)
+        ui.boxText = Color.new(150, 176, 190, 255)
+        ui.boxActiveText = Color.new(236, 252, 255, 255)
+    end
+    settingsWheelUI.chamfer(x, y, w, h, 5, 7, active and ui.boxActiveBody or ui.boxBody)
+    settingsWheelUI.outline(x, y, w, h, 5, 7, active and ui.cyan or ui.boxLine)
+    return active and ui.boxActiveText or ui.boxText
+end
+
+-- OFF and ON shown side by side; the active one is lit. y is the row text y minus 2.
+function settingsWheelUI.toggle(x, y, state)
+    local ui = cyberMenuUI
+    local on = (state == 1 or state == true)
+    local boxW = math.floor((ui.controlW - 4) / 2)
+    local boxH = 26
+    local boxY = y - 2
+    local font = cyberInfoUI.font(16)
+    local labels = { string.upper(tostring(lang_lines.Off or "OFF")), string.upper(tostring(lang_lines.On or "ON")) }
+    for index = 0, 1 do
+        local boxX = x + index * (boxW + 4)
+        local active = (index == 1) == on
+        local textColor = ui.controlBox(boxX, boxY, boxW, boxH, active)
+        local text = cyberInfoUI.fit(font, labels[index + 1], boxW - 12)
+        Font.print(font, boxX + math.floor((boxW - Font.getTextWidth(font, text)) / 2), boxY + 5, text, textColor)
+    end
+end
+
+-- < value > selector box
+function settingsWheelUI.slider(x, y, value)
+    local ui = cyberMenuUI
+    local w, h = ui.controlW, 26
+    local boxY = y - 2
+    local font = cyberInfoUI.font(16)
+    local textColor = ui.controlBox(x, boxY, w, h, false)
+    local text = cyberInfoUI.fit(font, tostring(value), w - 56)
+    Font.print(font, x + math.floor((w - Font.getTextWidth(font, text)) / 2), boxY + 5, text, ui.cyan)
+    Font.print(font, x + 12, boxY + 5, "<", ui.cyan)
+    Font.print(font, x + w - 12 - Font.getTextWidth(font, ">"), boxY + 5, ">", ui.cyan)
 end
 
 local function activate_settings_wheel_option(option)
@@ -18261,7 +18360,7 @@ while true do
 
         -- MENU 3 / #1 Startup Category
         Font.print(fnt22, setting_x, setting_y1, lang_lines.Startup_Category_colon, white)--Startup Category
-        settingsWheelUI.slider(setting_x_offset, setting_y1 - 2, startup_category_label(startCategory), 100)
+        settingsWheelUI.slider(setting_x_offset, setting_y1 - 2, startup_category_label(startCategory))
 
         -- MENU 3 / #2 Visible categories
         Font.print(fnt22, setting_x, setting_y2, lang_lines.Edit_category_visibility, white)
@@ -18282,7 +18381,7 @@ while true do
         status = System.getMessageState()
         if status ~= RUNNING then
             
-            if (Controls.check(pad, SCE_CTRL_CROSS_MAP) and not Controls.check(oldpad, SCE_CTRL_CROSS_MAP)) then
+            if (Controls.check(pad, SCE_CTRL_CROSS_MAP) and not Controls.check(oldpad, SCE_CTRL_CROSS_MAP)) or cyberMenuUI.sidePress({ [5] = (showHidden == 1) }) then
 
                 -- count favorites
                 refresh_fav_count_table()
@@ -18413,27 +18512,8 @@ while true do
 
         -- MENU 4 / #1 Theme Color
         Font.print(fnt22, setting_x, setting_y1,  lang_lines.Theme_Color_colon, white)
-        if themeColor == 1 then
-            Font.print(fnt22, setting_x_offset, setting_y1, lang_lines.Red, white)--Red
-        elseif themeColor == 2 then
-            Font.print(fnt22, setting_x_offset, setting_y1, lang_lines.Yellow, white)--Yellow
-        elseif themeColor == 3 then
-            Font.print(fnt22, setting_x_offset, setting_y1, lang_lines.Green, white)--Green
-        elseif themeColor == 4 then
-            Font.print(fnt22, setting_x_offset, setting_y1, lang_lines.Dark_Grey, white)-- Dark Grey
-        elseif themeColor == 5 then
-            Font.print(fnt22, setting_x_offset, setting_y1, lang_lines.Black, white)--Black
-        elseif themeColor == 6 then
-            Font.print(fnt22, setting_x_offset, setting_y1, lang_lines.Purple, white)--Purple
-        elseif themeColor == 7 then
-            Font.print(fnt22, setting_x_offset, setting_y1, lang_lines.Dark_Purple, white)--Dark Purple
-        elseif themeColor == 8 then
-            Font.print(fnt22, setting_x_offset, setting_y1, lang_lines.Orange, white)--Orange
-        elseif themeColor == 9 then
-            Font.print(fnt22, setting_x_offset, setting_y1, lang_lines.Grey, white)--Grey
-        else
-            Font.print(fnt22, setting_x_offset, setting_y1, lang_lines.Blue, white)--Blue
-        end
+        local themeColorNames = { [0] = lang_lines.Blue, lang_lines.Red, lang_lines.Yellow, lang_lines.Green, lang_lines.Dark_Grey, lang_lines.Black, lang_lines.Purple, lang_lines.Dark_Purple, lang_lines.Orange, lang_lines.Grey }
+        settingsWheelUI.slider(setting_x_offset, setting_y1 - 2, themeColorNames[themeColor] or lang_lines.Blue)
 
         -- MENU 4 / #2 Reflections
         Font.print(fnt22, setting_x, setting_y2, lang_lines.Reflection_Effect_colon, white) -- REFLECTION
@@ -18442,9 +18522,9 @@ while true do
         -- MENU 4 / #3 Custom Background
         Font.print(fnt22, setting_x, setting_y3,  lang_lines.Custom_Background_colon, white)
         if setBackground == 0 then
-            settingsWheelUI.toggle(setting_x_offset, setting_y3 - 2, 0)
+            settingsWheelUI.slider(setting_x_offset, setting_y3 - 2, lang_lines.Off)
         else
-            settingsWheelUI.toggle(setting_x_offset, setting_y3 - 2, 1)
+            settingsWheelUI.slider(setting_x_offset, setting_y3 - 2, tostring(wallpaper_table_settings[setBackground].wallpaper_string))
         end
 
         -- MENU 4 / #4 Smooth scrolling
@@ -18461,7 +18541,7 @@ while true do
 
         -- MENU 4 / #7 Cyberpunk Theme
         Font.print(fnt22, setting_x, setting_y7, lang_lines.Cyberpunk_Theme_colon or "Cyberpunk Theme: ", white)
-        settingsWheelUI.slider(setting_x_offset, setting_y7 - 2, cyberpunkThemes[previewCyberpunkTheme].name, 100)
+        settingsWheelUI.slider(setting_x_offset, setting_y7 - 2, cyberpunkThemes[previewCyberpunkTheme].name)
 
 
         cyberMenuUI.restore()
@@ -18470,7 +18550,7 @@ while true do
         status = System.getMessageState()
         if status ~= RUNNING then
     
-            if (Controls.check(pad, SCE_CTRL_CROSS_MAP) and not Controls.check(oldpad, SCE_CTRL_CROSS_MAP)) then
+            if (Controls.check(pad, SCE_CTRL_CROSS_MAP) and not Controls.check(oldpad, SCE_CTRL_CROSS_MAP)) or cyberMenuUI.sidePress({ [1] = "right", [2] = (setReflections == 1), [3] = "any", [4] = (smoothScrolling == 1), [5] = (set2DViews == 1), [6] = (setChangeViews == 1) }) then
                 if menuY == 0 then -- #0 Back
                     showMenu = 2
                     menuY = 2 -- Theme
@@ -18561,7 +18641,15 @@ while true do
                     menuY=0
                 end
             elseif (Controls.check(pad, SCE_CTRL_LEFT)) and not (Controls.check(oldpad, SCE_CTRL_LEFT)) then
-                if menuY == 7 then
+                if menuY == 1 then
+                    if themeColor > 0 then
+                        themeColor = themeColor - 1
+                    else
+                        themeColor = 9
+                    end
+                    SetThemeColor()
+                    SaveSettings()
+                elseif menuY == 7 then
                     if previewCyberpunkTheme > 0 then
                         previewCyberpunkTheme = previewCyberpunkTheme - 1
                     else
@@ -18595,7 +18683,7 @@ while true do
 
         Font.print(fnt22, setting_x, setting_y1, lang_lines.Download_colon, white)
         local artworkType = (download_artwork_type == 0) and lang_lines.Covers or lang_lines.Backgrounds
-        settingsWheelUI.slider(setting_x_offset, setting_y1 - 2, artworkType, 100)
+        settingsWheelUI.slider(setting_x_offset, setting_y1 - 2, artworkType)
 
 
         -- MENU 5 / #2 CRC Download
@@ -18617,7 +18705,7 @@ while true do
         status = System.getMessageState()
         if status ~= RUNNING then
             
-            if (Controls.check(pad, SCE_CTRL_CROSS_MAP) and not Controls.check(oldpad, SCE_CTRL_CROSS_MAP)) then
+            if (Controls.check(pad, SCE_CTRL_CROSS_MAP) and not Controls.check(oldpad, SCE_CTRL_CROSS_MAP)) or cyberMenuUI.sidePress({ [2] = (setCRCScan == 1), [3] = (Game_Backgrounds == 1), [4] = (setPSPExtractBG == 1) }) then
 
                 -- MENU 5
                 if menuY == 0 then -- #0 Back
@@ -18821,7 +18909,7 @@ while true do
         elseif Adrenaline_roms == 5 then
             adrRom = lang_lines.All
         end
-        settingsWheelUI.slider(setting_x_offset, setting_y4 - 2, adrRom .. ":/pspemu", 120)
+        settingsWheelUI.slider(setting_x_offset, setting_y4 - 2, adrRom .. ":/pspemu")
 
         -- MENU 6 / #5 Rescan
         Font.print(fnt22, setting_x, setting_y5, lang_lines.Rescan, white)--Rescan
@@ -18834,7 +18922,7 @@ while true do
         status = System.getMessageState()
         if status ~= RUNNING then
             
-            if (Controls.check(pad, SCE_CTRL_CROSS_MAP) and not Controls.check(oldpad, SCE_CTRL_CROSS_MAP)) then
+            if (Controls.check(pad, SCE_CTRL_CROSS_MAP) and not Controls.check(oldpad, SCE_CTRL_CROSS_MAP)) or cyberMenuUI.sidePress({ [2] = (startupScan == 1), [3] = (setScanCartridges == 1) }) then
 
                 -- MENU 2
                 if menuY == 0 then -- #0 Back
@@ -19894,7 +19982,7 @@ while true do
         status = System.getMessageState()
         if status ~= RUNNING then
     
-            if (Controls.check(pad, SCE_CTRL_CROSS_MAP) and not Controls.check(oldpad, SCE_CTRL_CROSS_MAP)) then
+            if (Controls.check(pad, SCE_CTRL_CROSS_MAP) and not Controls.check(oldpad, SCE_CTRL_CROSS_MAP)) or cyberMenuUI.sidePress({ [1] = (setSounds == 1), [2] = (setMusic == 1), [3] = (setMusicShuffle == 1) }) then
                 if menuY == 0 then -- #0 Back
                     showMenu = 2
                     menuY = 3 -- Audio 
@@ -20284,7 +20372,7 @@ while true do
         elseif setAdrPSButton == 2 then
             adrButton = lang_lines.Standard
         end
-        settingsWheelUI.slider(setting_x_offset, setting_y2 - 2, adrButton, 100)
+        settingsWheelUI.slider(setting_x_offset, setting_y2 - 2, adrButton)
 
         -- MENU 19 / #3 Show missing covers
         Font.print(fnt22, setting_x, setting_y3,  lang_lines.Show_missing_covers_colon, white)
@@ -20297,7 +20385,7 @@ while true do
         -- MENU 19 / #5 Time
         Font.print(fnt22, setting_x, setting_y5, lang_lines.Time_colon, white)--Time
         local timeFormat = (setTime == 1) and lang_lines.Time_12hr or lang_lines.Time_24hr
-        settingsWheelUI.slider(setting_x_offset, setting_y5 - 2, timeFormat, 100)
+        settingsWheelUI.slider(setting_x_offset, setting_y5 - 2, timeFormat)
 
         -- MENU 19 / #6 Global core settings
         Font.print(fnt22, setting_x, setting_y6, lang_lines.Global_core_settings, white)--Global core settings
@@ -20308,7 +20396,7 @@ while true do
         status = System.getMessageState()
         if status ~= RUNNING then
     
-            if (Controls.check(pad, SCE_CTRL_CROSS_MAP) and not Controls.check(oldpad, SCE_CTRL_CROSS_MAP)) then
+            if (Controls.check(pad, SCE_CTRL_CROSS_MAP) and not Controls.check(oldpad, SCE_CTRL_CROSS_MAP)) or cyberMenuUI.sidePress({ [1] = (setSwap_X_O_buttons == 1), [2] = "right", [3] = (showMissingCovers == 1), [4] = (setShowCores == 1), [5] = "any" }) then
                 if menuY == 0 then -- #0 Back
                     showMenu = 2
                     menuY = 6 -- Other Settings
@@ -20402,6 +20490,15 @@ while true do
                     menuY = menuY + 1
                     else
                     menuY=0
+                end
+            elseif (Controls.check(pad, SCE_CTRL_LEFT)) and not (Controls.check(oldpad, SCE_CTRL_LEFT)) then
+                if menuY == 2 then -- #2 Adrenaline PS Button
+                    if setAdrPSButton > 0 then
+                        setAdrPSButton = setAdrPSButton - 1
+                    else
+                        setAdrPSButton = 2
+                    end
+                    SaveSettings()
                 end
             end
             
