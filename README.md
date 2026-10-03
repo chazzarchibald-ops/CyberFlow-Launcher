@@ -21,6 +21,7 @@ A Cyberpunk 2077 inspired mod of [RetroFlow Launcher](https://github.com/jimbob4
 ## CyberFlow features
 
 **Interface**
+* Animated background (MP4 Rendered) making the app feel truly alive and atmospheric, with different ones per theme.
 * Cyberpunk 2077 HUD styling throughout: Rajdhani font, cyan / red / yellow neon palette, chamfered panels, scan lines and glitch accents.
 * **Cyberdeck RAM** header on the games screen: a segmented RAM bar that fills as you move through your categories.
 * Redesigned **start menu** coverflow with translucent unselected covers, a name band and neon footer bar with round key icons.
