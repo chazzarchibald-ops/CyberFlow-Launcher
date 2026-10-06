@@ -243,7 +243,7 @@ You can change your background within the app by going to Settings > Theme > Cus
 
 
 # Credits
-
+*Full credits to jimbob4000 for creating RetroFlow https://github.com/jimbob4000/RetroFlow-Launcher, a fork of VitaHex's original creation of HexFlow https://github.com/VitaHEX-Games/HexFlow-Launcher
 * CyberFlow Mod created by badmanwazzy37.
 * Credits to CDPROJEKT RED for creating such a breathtaking game, Cyberpunk 2077's legacy will live on forever.
 * Credits to Claude Sonnet 5.5 & Opus 5.5 for making the vision happen.
