@@ -3,7 +3,7 @@
 
 # CyberFlow Launcher
 
-A Cyberpunk 2077 inspired mod of [RetroFlow Launcher](https://github.com/jimbob4000/RetroFlow-Launcher) (itself an expansion of [HexFlow Launcher](https://github.com/VitaHEX-Games/HexFlow-Launcher)) for the PS Vita. CyberFlow keeps the 3D coverflow and the "no bubbles needed" retro game library of RetroFlow and wraps it in a true Cyberpunk 2077 interface: Cyberdeck HUD, Cyberpunk 2077 menus, quickhack buttons, ten themes drawn from the game, a Custom theme slot for your own video and music, and for the first time ever, an animated background and interface.
+A Cyberpunk 2077 inspired mod of [RetroFlow Launcher](https://github.com/jimbob4000/RetroFlow-Launcher) (itself an expansion of [HexFlow Launcher](https://github.com/VitaHEX-Games/HexFlow-Launcher)) for the PS Vita. CyberFlow keeps the 3D coverflow, the "no bubbles needed" retro game library of RetroFlow and wraps it in a true Cyberpunk 2077 interface: Cyberdeck HUD, Cyberpunk 2077 menus, quickhack buttons, ten themes drawn from the game, a Custom theme slot for your own video and music, and for the first time ever, an animated background and interface. Keeping intact thw original file locations and functionality from RetroFlow to be used alongside RetroFlow.
 
 <p align="center">
   <img src="Media/Screenshots/start_menu.png" alt="Start menu" width="48%">
