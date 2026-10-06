@@ -89,7 +89,7 @@ RetroFlow is launched as a homebrew application and does not permanently replace
 
 # Quick Start
 
-1. Install RetroFlow.
+1. Install CyberFlow.
 2. Install RetroArch and/or Adrenaline if required.
 3. Copy your games into the RetroFlow ROM folders or configure your own directories.
 4. Open RetroFlow and select Rescan.
@@ -104,7 +104,7 @@ For full setup instructions, see the Installation & Setup section below.
 
 ## 1. Install the CyberFlow VPK
 
-* Install the [latest version of CyberFlow](https://github.com/jimbob4000/RetroFlow-Launcher/releases) 
+* Install the [latest version of CyberFlow](https://github.com/chazzarchibald-ops/CyberFlow-Launcher/releases) 
 * On the first run it will install some required files for Adrenaline if necessary.
 * Adrenaline Bubble Booter will be installed automatically if you haven't got it already, you will be prompted to restart the Vita if this is installed. 
 * RetroFlow Adrenaline Launcher vpk will also be installed which is used for launching games with Adrenaline. You don't need to open this bubble, but keep it as RetroFlow uses it when launching games with Adrenaline.
