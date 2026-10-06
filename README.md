@@ -26,7 +26,7 @@ A Cyberpunk 2077 inspired mod of [RetroFlow Launcher](https://github.com/jimbob4
 * **Cyberdeck RAM** header on the games screen: a segmented RAM bar that fills as you move through your categories.
 * Redesigned **start menu** coverflow with translucent unselected covers, a name band and neon footer bar with round key icons.
 * **Game information screen** rebuilt as a scanner HUD: quickhack-style action buttons (Download cover / Override category) with status pills, a tabbed DATA / CONSOLE window (R1 to switch) and the console's icon.
-* **Settings hub** redesigned in the style of the Arasaka mask selector, with centred sub-menus, a darkened backdrop and the CyberFlow logo.
+* **Settings hub** redesigned in the style of the Cyberpunk 2077 Pause/Hub Menu, with centered sub-menus, a darkened backdrop and the CyberFlow logo.
 * Visual **OFF / ON toggles**, sliders and selector boxes in every settings menu, plus restyled footer key icons.
 * Cyberpunk **Help** menu and an **About** page with the full CyberFlow and original RetroFlow credits (scroll with the right stick).
 * **Futuristic menu animations**: a shutter and scan-line reveal when a menu opens, a glowing sweep wipe when it closes, and a short glitch burst when moving between menus.
@@ -102,9 +102,9 @@ For full setup instructions, see the Installation & Setup section below.
 <!--**Note:** Adrenaline [(6.61 Adrenaline-7)](https://github.com/TheOfficialFloW/Adrenaline/releases/tag/v7) by TheOfficialFloW is required if you intend to use RetroFlow for PSP and PS1 games. If you are on a lower / higher version of Adrenaline or a fork of Adrenaline, please install the one in the link above. 
 <br>Unofficial forks of Adrenaline are not supported.-->
 
-## 1. Install the RetroFlow VPK
+## 1. Install the CyberFlow VPK
 
-* Install the [latest version of RetroFlow](https://github.com/jimbob4000/RetroFlow-Launcher/releases) 
+* Install the [latest version of CyberFlow](https://github.com/jimbob4000/RetroFlow-Launcher/releases) 
 * On the first run it will install some required files for Adrenaline if necessary.
 * Adrenaline Bubble Booter will be installed automatically if you haven't got it already, you will be prompted to restart the Vita if this is installed. 
 * RetroFlow Adrenaline Launcher vpk will also be installed which is used for launching games with Adrenaline. You don't need to open this bubble, but keep it as RetroFlow uses it when launching games with Adrenaline.
