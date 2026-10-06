@@ -31,7 +31,7 @@ A Cyberpunk 2077 inspired mod of [RetroFlow Launcher](https://github.com/jimbob4
 * Cyberpunk **Help** menu and an **About** page with the full CyberFlow and original RetroFlow credits (scroll with the right stick).
 * **Futuristic menu animations**: a shutter and scan-line reveal when a menu opens, a glowing sweep wipe when it closes, and a short glitch burst when moving between menus.
 
-**Themes** (Settings > Appearance > Cyberpunk Theme, with live preview and thumbnails)
+**Themes** (Settings > Cyberpunk Theme, with live preview and thumbnails)
 * 10 presets plus Classic and a Custom slot (drop your own `background.mp4` and `music.ogg` into `THEMES/CUSTOM`): Arasaka, Dogtown, Night City, Ending, Main Theme, Mikoshi, Alt Cunningham, Just Another Weapon (Phantom Liberty), Nocturne OP55N1 and Edgerunners.
 * Each preset sets the interface accent colour, font colour, a themed menu logo and optionally an MP4 background video and looping soundtrack. See [Cyberpunk Theme Presets](docs/Cyberpunk-Themes.md).
 
