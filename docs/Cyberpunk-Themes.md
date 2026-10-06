@@ -4,21 +4,22 @@ RetroFlow includes selectable color-and-media presets inspired by the Cyberpunk 
 
 ## Presets
 
+Every preset shares the same CyberFlow interface colours (the Arasaka red accent and light font colour); presets differ only in their media and preview.
+
 | Preset | Accent / interface color | Font color | Media folder |
 | --- | --- | --- | --- |
 | Classic | Existing RetroFlow color | White | None |
 | Arasaka | `#DC1C2E` | `#FFDCDA` | `ux0:/data/RetroFlow/THEMES/ARASAKA/` |
-| Dogtown | `#00FFC8` | `#FF8C32` | `ux0:/data/RetroFlow/THEMES/DOGTOWN/` |
-| Night City | `#00BEDC` | `#FFCF52` | `ux0:/data/RetroFlow/THEMES/NIGHT_CITY/` |
-| Arasaka Tower | `#C5182C` | `#FFE8E0` | `ux0:/data/RetroFlow/THEMES/ARASAKA_TOWER/` |
-| Ending | `#F1AE30` | `#2AE0E8` | `ux0:/data/RetroFlow/THEMES/ENDING/` |
-| Johnny Silverhand | `#E62F36` | `#C2D2DC` | `ux0:/data/RetroFlow/THEMES/JOHNNY_SILVERHAND/` |
-| Main Theme | `#F7DA38` | `#2DDDF4` | `ux0:/data/RetroFlow/THEMES/MAIN_THEME/` |
-| Mikoshi | `#25DAE8` | `#F64EBE` | `ux0:/data/RetroFlow/THEMES/MIKOSHI/` |
-| Militech | `#2F71C6` | `#F2B04A` | `ux0:/data/RetroFlow/THEMES/MILITECH/` |
-| Alt Cunningham | `#D43AD3` | `#44E1EC` | `ux0:/data/RetroFlow/THEMES/ALT_CUNNINGHAM/` |
-| Just Another Weapon: Phantom Liberty | `#EB9927` | `#B7E1EB` | `ux0:/data/RetroFlow/THEMES/JUST_ANOTHER_WEAPON_PHANTOM_LIBERTY/` |
-| Nocturne OP55N1 | `#C42D39` | `#EFD7D4` | `ux0:/data/RetroFlow/THEMES/NOCTURNE_OP55N1/` |
+| Dogtown | `#DC1C2E` | `#FFDCDA` | `ux0:/data/RetroFlow/THEMES/DOGTOWN/` |
+| Night City | `#DC1C2E` | `#FFDCDA` | `ux0:/data/RetroFlow/THEMES/NIGHT_CITY/` |
+| Ending | `#DC1C2E` | `#FFDCDA` | `ux0:/data/RetroFlow/THEMES/ENDING/` |
+| Main Theme | `#DC1C2E` | `#FFDCDA` | `ux0:/data/RetroFlow/THEMES/MAIN_THEME/` |
+| Mikoshi | `#DC1C2E` | `#FFDCDA` | `ux0:/data/RetroFlow/THEMES/MIKOSHI/` |
+| Alt Cunningham | `#DC1C2E` | `#FFDCDA` | `ux0:/data/RetroFlow/THEMES/ALT_CUNNINGHAM/` |
+| Just Another Weapon: Phantom Liberty | `#DC1C2E` | `#FFDCDA` | `ux0:/data/RetroFlow/THEMES/JUST_ANOTHER_WEAPON_PHANTOM_LIBERTY/` |
+| Nocturne OP55N1 | `#DC1C2E` | `#FFDCDA` | `ux0:/data/RetroFlow/THEMES/NOCTURNE_OP55N1/` |
+| Edgerunners | `#DC1C2E` | `#FFDCDA` | `ux0:/data/RetroFlow/THEMES/EDGERUNNERS/` |
+| Custom | `#DC1C2E` | `#FFDCDA` | `ux0:/data/RetroFlow/THEMES/CUSTOM/` |
 
 Each themed folder can contain:
 
@@ -26,6 +27,10 @@ Each themed folder can contain:
 - `music.ogg` for a matching looping soundtrack. Enable Music in RetroFlow's Audio settings.
 
 The video and music files are optional. If a theme video is missing or cannot be opened, RetroFlow keeps using its selected wallpaper. If a theme soundtrack is missing, RetroFlow uses the normal `MUSIC` folder and its existing shuffle settings.
+
+## Custom Theme
+
+Choose **Custom** in the theme picker to use your own media. Copy your own `background.mp4` and/or `music.ogg` into `ux0:/data/RetroFlow/THEMES/CUSTOM/` (the folder is created automatically when Custom is selected), then restart RetroFlow. Both files are optional and follow the same rules as the other presets.
 
 ## Selecting a Preset
 

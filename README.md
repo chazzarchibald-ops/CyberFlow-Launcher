@@ -3,7 +3,7 @@
 
 # CyberFlow Launcher
 
-A Cyberpunk 2077 inspired mod of [RetroFlow Launcher](https://github.com/jimbob4000/RetroFlow-Launcher) (itself an expansion of [HexFlow Launcher](https://github.com/VitaHEX-Games/HexFlow-Launcher)) for the PS Vita. CyberFlow keeps the 3D coverflow and the "no bubbles needed" retro game library of RetroFlow and wraps it in a true Cyberpunk 2077 interface: Cyberdeck HUD, Cyberpunk 2077 menus, quickhack buttons, twelve themes drawn from the game and for the first time ever, an animated background and interface.
+A Cyberpunk 2077 inspired mod of [RetroFlow Launcher](https://github.com/jimbob4000/RetroFlow-Launcher) (itself an expansion of [HexFlow Launcher](https://github.com/VitaHEX-Games/HexFlow-Launcher)) for the PS Vita. CyberFlow keeps the 3D coverflow and the "no bubbles needed" retro game library of RetroFlow and wraps it in a true Cyberpunk 2077 interface: Cyberdeck HUD, Cyberpunk 2077 menus, quickhack buttons, ten themes drawn from the game, a Custom theme slot for your own video and music, and for the first time ever, an animated background and interface.
 
 <p align="center">
   <img src="Media/Screenshots/start_menu.png" alt="Start menu" width="48%">
@@ -32,7 +32,7 @@ A Cyberpunk 2077 inspired mod of [RetroFlow Launcher](https://github.com/jimbob4
 * **Futuristic menu animations**: a shutter and scan-line reveal when a menu opens, a glowing sweep wipe when it closes, and a short glitch burst when moving between menus.
 
 **Themes** (Settings > Appearance > Cyberpunk Theme, with live preview and thumbnails)
-* 12 presets plus Classic: Arasaka, Dogtown, Night City, Arasaka Tower, Ending, Johnny Silverhand, Main Theme, Mikoshi, Militech, Alt Cunningham, Just Another Weapon (Phantom Liberty) and Nocturne OP55N1.
+* 10 presets plus Classic and a Custom slot (drop your own `background.mp4` and `music.ogg` into `THEMES/CUSTOM`): Arasaka, Dogtown, Night City, Ending, Main Theme, Mikoshi, Alt Cunningham, Just Another Weapon (Phantom Liberty), Nocturne OP55N1 and Edgerunners.
 * Each preset sets the interface accent colour, font colour, a themed menu logo and optionally an MP4 background video and looping soundtrack. See [Cyberpunk Theme Presets](docs/Cyberpunk-Themes.md).
 
 **Everything RetroFlow does**

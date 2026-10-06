@@ -3265,19 +3265,18 @@ local themeColor = 9 -- 0 blue, 1 red, 2 yellow, 3 green, 4 grey, 5 black, 6 pur
 local cyberpunkThemes = {
     [0] = { name = "Classic" },
     [1] = { name = "Arasaka", folder = "ARASAKA", accent = { 220, 28, 46 }, text = { 255, 220, 218 } },
-    [2] = { name = "Dogtown", folder = "DOGTOWN", accent = { 0, 255, 200 }, text = { 255, 140, 50 } },
-    [3] = { name = "Night City", folder = "NIGHT_CITY", accent = { 0, 190, 220 }, text = { 255, 207, 82 } },
-    [4] = { name = "Arasaka Tower", folder = "ARASAKA_TOWER", accent = { 197, 24, 44 }, text = { 255, 232, 224 } },
-    [5] = { name = "Ending", folder = "ENDING", accent = { 241, 174, 48 }, text = { 42, 224, 232 } },
-    [6] = { name = "Johnny Silverhand", folder = "JOHNNY_SILVERHAND", accent = { 230, 47, 54 }, text = { 194, 210, 220 } },
-    [7] = { name = "Main Theme", folder = "MAIN_THEME", accent = { 247, 218, 56 }, text = { 45, 221, 244 } },
-    [8] = { name = "Mikoshi", folder = "MIKOSHI", accent = { 37, 218, 232 }, text = { 246, 78, 190 } },
-    [9] = { name = "Militech", folder = "MILITECH", accent = { 47, 113, 198 }, text = { 242, 176, 74 } },
-    [10] = { name = "Alt Cunningham", folder = "ALT_CUNNINGHAM", accent = { 212, 58, 211 }, text = { 68, 225, 236 } },
-    [11] = { name = "Just Another Weapon: Phantom Liberty", folder = "JUST_ANOTHER_WEAPON_PHANTOM_LIBERTY", accent = { 235, 153, 39 }, text = { 183, 225, 235 } },
-    [12] = { name = "Nocturne OP55N1", folder = "NOCTURNE_OP55N1", accent = { 196, 45, 57 }, text = { 239, 215, 212 } },
+    [2] = { name = "Dogtown", folder = "DOGTOWN", accent = { 220, 28, 46 }, text = { 255, 220, 218 } },
+    [3] = { name = "Night City", folder = "NIGHT_CITY", accent = { 220, 28, 46 }, text = { 255, 220, 218 } },
+    [4] = { name = "Ending", folder = "ENDING", accent = { 220, 28, 46 }, text = { 255, 220, 218 } },
+    [5] = { name = "Main Theme", folder = "MAIN_THEME", accent = { 220, 28, 46 }, text = { 255, 220, 218 } },
+    [6] = { name = "Mikoshi", folder = "MIKOSHI", accent = { 220, 28, 46 }, text = { 255, 220, 218 } },
+    [7] = { name = "Alt Cunningham", folder = "ALT_CUNNINGHAM", accent = { 220, 28, 46 }, text = { 255, 220, 218 } },
+    [8] = { name = "Just Another Weapon: Phantom Liberty", folder = "JUST_ANOTHER_WEAPON_PHANTOM_LIBERTY", accent = { 220, 28, 46 }, text = { 255, 220, 218 } },
+    [9] = { name = "Nocturne OP55N1", folder = "NOCTURNE_OP55N1", accent = { 220, 28, 46 }, text = { 255, 220, 218 } },
+    [10] = { name = "Edgerunners", folder = "EDGERUNNERS", accent = { 220, 28, 46 }, text = { 255, 220, 218 } },
+    [11] = { name = "Custom", folder = "CUSTOM", accent = { 220, 28, 46 }, text = { 255, 220, 218 } },
 }
-local cyberpunkThemeCount = 12
+local cyberpunkThemeCount = 11
 local selectedCyberpunkTheme = 0
 local previewCyberpunkTheme = 0
 local cyberpunkThemeMusicPath = nil
@@ -16347,8 +16346,10 @@ function cyberMenuUI.restore()
 end
 
 cyberMenuUI.fx = { last = 0, kind = 0, t = 999, seed = 1 }
+cyberMenuUI.frame = 0
 
 function cyberMenuUI.fxStep(menu)
+    cyberMenuUI.frame = cyberMenuUI.frame + 1
     local fx = cyberMenuUI.fx
     if menu ~= fx.last then
         if fx.last == 0 then
@@ -16665,22 +16666,7 @@ function cyberMenuUI.themeLogo(index, cx, cy)
         end
         drawHudLine(cx - 8, cx - 8, base - 66, base - 80, a)
         drawHudLine(cx - 62, cx + 62, base, base, a)
-    elseif index == 4 then -- Arasaka Tower
-        local levels = { { 6, -60, -42 }, { 14, -42, -20 }, { 24, -20, 6 }, { 38, 6, 40 } }
-        for _, v in ipairs(levels) do
-            drawFillRect(cx - v[1], cx + v[1], cy + v[2], cy + v[3], k)
-            drawHudLine(cx - v[1], cx + v[1], cy + v[2], cy + v[2], a)
-            drawHudLine(cx - v[1], cx - v[1], cy + v[2], cy + v[3], a)
-            drawHudLine(cx + v[1], cx + v[1], cy + v[2], cy + v[3], a)
-            for wy = cy + v[2] + 5, cy + v[3] - 3, 6 do
-                drawHudLine(cx - v[1] + 3, cx + v[1] - 3, wy, wy, d)
-            end
-        end
-        thick(cx, cx, cy - 60, cy - 80, a, 2)
-        disc(cx, cy - 82, 2, t)
-        drawHudLine(cx - 60, cx + 60, cy + 40, cy + 40, a)
-        drawHudLine(cx - 50, cx + 50, cy + 44, cy + 44, d)
-    elseif index == 5 then -- Ending: sunset over the horizon
+    elseif index == 4 then -- Ending: sunset over the horizon
         local hy = cy + 12
         for dy = -40, 0 do
             local w = math.floor(math.sqrt(1600 - dy * dy))
@@ -16695,20 +16681,12 @@ function cyberMenuUI.themeLogo(index, cx, cy)
             local w = 58 - i * 10
             drawHudLine(cx - w, cx + w, hy + i * 8, hy + i * 8, d)
         end
-    elseif index == 6 then -- Johnny Silverhand: Samurai blade
-        ring(cx, cy, 46, a)
-        ring(cx, cy, 44, a)
-        ring(cx, cy, 38, d)
-        thick(cx + 30, cx - 12, cy - 30, cy + 12, t, 4)
-        thick(cx - 20, cx - 4, cy + 4, cy + 20, a, 4)
-        thick(cx - 12, cx - 30, cy + 12, cy + 30, a, 5)
-        ui.centerText(small, cx, cy + 52, "SAMURAI", t)
-    elseif index == 7 then -- Main Theme: 2077 hex badge
+    elseif index == 5 then -- Main Theme: 2077 hex badge
         settingsWheelUI.hexagon(cx, cy, 50, a)
         settingsWheelUI.hexagon(cx, cy, 45, a)
         ui.centerText(small, cx, cy - 26, "CYBERPUNK", t)
         ui.centerText(big, cx, cy - 12, "2077", a)
-    elseif index == 8 then -- Mikoshi: nested lattice
+    elseif index == 6 then -- Mikoshi: nested lattice
         settingsWheelUI.hexagon(cx, cy, 48, a)
         settingsWheelUI.hexagon(cx, cy, 47, a)
         settingsWheelUI.hexagon(cx, cy, 32, a)
@@ -16721,15 +16699,7 @@ function cyberMenuUI.themeLogo(index, cx, cy)
         end
         disc(cx, cy, 7, t)
         ring(cx, cy, 11, a)
-    elseif index == 9 then -- Militech: ringed chevrons
-        disc(cx, cy, 46, a)
-        thick(cx - 26, cx, cy - 20, cy - 2, k, 5)
-        thick(cx, cx + 26, cy - 2, cy - 20, k, 5)
-        thick(cx - 26, cx, cy - 4, cy + 14, k, 5)
-        thick(cx, cx + 26, cy + 14, cy - 4, k, 5)
-        drawFillRect(cx - 28, cx + 29, cy + 26, cy + 31, k)
-        ring(cx, cy, 52, d)
-    elseif index == 10 then -- Alt Cunningham: watching eye
+    elseif index == 7 then -- Alt Cunningham: watching eye
         local px, ptop, pbot
         for i = -40, 40, 4 do
             local h = math.floor(24 * (1 - (i / 40) * (i / 40)))
@@ -16747,7 +16717,7 @@ function cyberMenuUI.themeLogo(index, cx, cy)
         Font.print(small, cx + 42, cy - 50, "10", t)
         Font.print(small, cx - 56, cy + 38, "11", t)
         Font.print(small, cx + 42, cy + 38, "00", t)
-    elseif index == 11 then -- Phantom Liberty: torch crown
+    elseif index == 8 then -- Phantom Liberty: torch crown
         for step = 0, 6 do
             local ang = math.pi + step * math.pi / 6
             local c, s = math.cos(ang), math.sin(ang)
@@ -16758,7 +16728,7 @@ function cyberMenuUI.themeLogo(index, cx, cy)
         disc(cx, cy + 10, 12, t)
         drawFillRect(cx - 10, cx + 11, cy + 34, cy + 42, a)
         drawFillRect(cx - 26, cx + 27, cy + 42, cy + 48, a)
-    elseif index == 12 then -- Nocturne OP55N1: notes on a staff
+    elseif index == 9 then -- Nocturne OP55N1: notes on a staff
         for line = 0, 4 do
             drawHudLine(cx - 56, cx + 56, cy - 20 + line * 10, cy - 20 + line * 10, d)
         end
@@ -16767,6 +16737,26 @@ function cyberMenuUI.themeLogo(index, cx, cy)
         thick(cx - 17, cx - 17, cy + 24, cy - 34, a, 3)
         thick(cx + 23, cx + 23, cy + 14, cy - 44, a, 3)
         thick(cx - 17, cx + 23, cy - 34, cy - 44, a, 6)
+    elseif index == 10 then -- Edgerunners: moonrise over the lunar surface
+        disc(cx, cy - 6, 40, a)
+        disc(cx, cy - 6, 34, k)
+        disc(cx, cy - 6, 30, d)
+        for i = 0, 3 do
+            drawHudLine(cx - 56 + i * 8, cx + 56 - i * 8, cy + 30 + i * 6, cy + 30 + i * 6, i % 2 == 0 and a or t)
+        end
+    elseif index == 11 then -- Custom: your own video and soundtrack
+        local fx1, fx2, fy1, fy2 = cx - 44, cx + 45, cy - 40, cy + 12
+        drawHudLine(fx1, fx2, fy1, fy1, a)
+        drawHudLine(fx1, fx2, fy2, fy2, a)
+        drawHudLine(fx1, fx1, fy1, fy2, a)
+        drawHudLine(fx2, fx2, fy1, fy2, a)
+        for j = 0, 18 do
+            local half = 18 - j
+            drawFillRect(cx - 8 + j, cx - 7 + j, cy - 14 - half, cy - 14 + half + 1, a)
+        end
+        ui.centerText(small, cx, cy + 22, "background.mp4", t)
+        ui.centerText(small, cx, cy + 38, "music.ogg", t)
+        ui.centerText(small, cx, cy + 56, "THEMES/CUSTOM", d)
     else -- Classic
         ring(cx, cy, 44, a)
         ring(cx, cy, 40, d)
@@ -16903,6 +16893,11 @@ function cyberMenuUI.drawThemeMenu()
     local thumbH = math.floor(boxH * rows / count)
     local thumbY = bodyY + math.floor((boxH - thumbH) * ui.themeScroll / math.max(1, count - rows))
     drawFillRect(trackX, trackX + 3, thumbY, thumbY + thumbH, ui.tEdge)
+
+    local noteFont = cyberInfoUI.font(12)
+    local noteW = right - left
+    Font.print(noteFont, left, 404, cyberInfoUI.fit(noteFont, "NOTE: The video background may glitch and show improperly after selecting a theme more than 2 times.", noteW), ui.cyan)
+    Font.print(noteFont, left, 424, cyberInfoUI.fit(noteFont, "Just close out of CyberFlow and relaunch to fix this. May or may not be fixed in future updates.", noteW), ui.itemText)
 
     drawHudLine(left, right, 456, 456, ui.tEdgeDim)
     ui.footer({
@@ -20856,6 +20851,12 @@ while true do
                 "Credits to CDPROJEKT RED for creating such a breathtaking game, Cyberpunk 2077's legacy will live on forever.\n\n" ..
                 "Credits to Claude Sonnet 5.5 & Opus 5.5 for making the vision happen.\n\n" ..
                 "Credits to jimbob4000 & VitaHex for their initial and ongoing work on RetroFlow & HexFlow.\n\n" ..
+                "OST SCORE CREDITS\n\n" ..
+                "Marcin Przybyłowicz\n" ..
+                "P.T. Adamczyk\n" ..
+                "Paul Leonard-Morgan\n" ..
+                "Dawid Podsiadło\n" ..
+                "Rosa Walton\n\n" ..
                 "ORIGINAL RETROFLOW CREDITS\n\n" ..
                 "RetroFlow by jimbob4000 is a modified version of the HexFlow app.\n\n" ..
                 "The original HexFlow app is by VitaHex. Support VitaHex's projects on patreon.com/vitahex\n\n" ..
@@ -20900,7 +20901,7 @@ while true do
             local aboutLine = cyberMenuUI.aboutLines[cyberMenuUI.aboutScroll + row]
             if aboutLine ~= nil and aboutLine ~= "" then
                 local aboutColor = cyberMenuUI.bodyText
-                if aboutLine == "ORIGINAL RETROFLOW CREDITS" or aboutLine == "SPECIAL THANKS" then
+                if aboutLine == "OST SCORE CREDITS" or aboutLine == "ORIGINAL RETROFLOW CREDITS" or aboutLine == "SPECIAL THANKS" then
                     aboutColor = cyberMenuUI.cyan
                 end
                 Font.print(fnt22, setting_x, setting_y2 + (row - 1) * 22, aboutLine, aboutColor)
@@ -21104,11 +21105,25 @@ while true do
 
 
         -- GET MENU ITEM COUNT (Some menus app type specific)
-            
+        -- The checks below scan game tables and hit the file system, so they only run when the selection or a button changes (not every frame)
+        local adrenaline_flag, recent_cat_flag, core_options_flag
+        local m20 = cyberMenuUI.m20
+        if m20 ~= nil and (m20.frame ~= cyberMenuUI.frame - 1 or m20.p ~= p or m20.cat ~= showCat or pad ~= oldpad) then
+            m20 = nil
+        end
+
+        if m20 ~= nil then
+            m20.frame = cyberMenuUI.frame
+            menuItems = m20.menuItems
+            adrenaline_flag = m20.adrenaline
+            recent_cat_flag = m20.recent
+            core_options_flag = m20.core
+        else
+
             menuItems = 3
-            
+
             -- Check for dynamic menu item
-            local adrenaline_flag = false
+            adrenaline_flag = false
             if apptype == 1 or apptype == 2 or apptype == 3 or apptype == 4 then
                 if string.match (xCatLookup(showCat)[p].game_path, "pspemu") and not System.doesFileExist(xCatLookup(showCat)[p].game_path .. "/EBOOT.PBP") then
                     
@@ -21121,7 +21136,7 @@ while true do
             end
 
             -- Add extra for remove from recent
-            local recent_cat_flag = false
+            recent_cat_flag = false
             if showCat == 48 then
                 recent_cat_flag = true
                 menuItems = menuItems + 1
@@ -21141,7 +21156,7 @@ while true do
             remove_from_collection_flag = false
 
             collection_removal_table = {}
-            
+
             if #collection_files > 0 then
                 local check_collection_number = 0
                 local count_of_matches = 0
@@ -21159,7 +21174,7 @@ while true do
 
                 end
             end
- 
+
             if #collection_removal_table == 0 then
                 remove_from_collection_flag = false
             else
@@ -21173,17 +21188,24 @@ while true do
                 menuItems = menuItems + 1
             end
 
-            local core_options_flag = false
+            core_options_flag = false
             if adrenaline_flag == false and (apptype == 43 or (setShowCores == 1 and core_overrides[apptype])) then
                 -- Alternative RetroArch cores, DSVita
                 core_options_flag = true
                 menuItems = menuItems + 1
             end
 
-            -- Calculate vertical centre
-            vertically_centre_mini_menu(menuItems)
+            GetInfoSelected() -- Get game info for heading
 
-        GetInfoSelected() -- Get game info for heading
+            cyberMenuUI.m20 = {
+                frame = cyberMenuUI.frame, p = p, cat = showCat, menuItems = menuItems,
+                adrenaline = adrenaline_flag, recent = recent_cat_flag, core = core_options_flag,
+            }
+        end
+
+        -- Calculate vertical centre
+        vertically_centre_mini_menu(menuItems)
+
         cyberMenuUI.begin(app_title)
 
 
@@ -21272,6 +21294,7 @@ while true do
         
         
         cyberMenuUI.restore()
+        if pad ~= oldpad then cyberMenuUI.m20 = nil end
 
         -- MENU 20 - FUNCTIONS
         status = System.getMessageState()
