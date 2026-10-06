@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<livearea style="a1" format-ver="01.00" content-rev="2">
+	<livearea-background>
+		<image>bg.png</image>
+	</livearea-background>
+
+	<gate>
+		<startup-image>startup.png</startup-image>
+	</gate>
+
+	<frame id="frame3" multi="o" autoflip="0" >
+
+		<liveitem>
+			<target>psla:recovery</target>
+			<background valign="bottom" align="center">recovery.png</background>
+			<text origin="background" line-align="center" margin-top="-6">
+				<str size="20" bold="off" shadow="on" color="#ffffff">リカバリーツール</str>
+			</text>
+			<lang>ja</lang>
+		</liveitem>
+
+		<liveitem>
+			<target>psla:recovery</target>
+			<background valign="bottom" align="center">recovery.png</background>
+			<text origin="background" line-align="center" margin-top="-6">
+				<str size="20" bold="off" shadow="on" color="#ffffff">Recovery tools</str>
+			</text>
+			<lang>en</lang>
+		</liveitem>
+
+		<liveitem>
+			<target>psla:recovery</target>
+			<background valign="bottom" align="center">recovery.png</background>
+			<text origin="background" line-align="center" margin-top="-6">
+				<str size="20" bold="off" shadow="on" color="#ffffff">Recovery tools</str>
+			</text>
+			<lang>en-gb</lang>
+		</liveitem>
+
+		<liveitem>
+			<target>psla:recovery</target>
+			<background valign="bottom" align="center">recovery.png</background>
+			<text origin="background" line-align="center" margin-top="-6">
+				<str size="20" bold="off" shadow="on" color="#ffffff">Récupération</str>
+			</text>
+			<lang>fr</lang>
+		</liveitem>
+
+		<liveitem>
+			<target>psla:recovery</target>
+			<background valign="bottom" align="center">recovery.png</background>
+			<text origin="background" line-align="center" margin-top="-6">
+				<str size="20" bold="off" shadow="on" color="#ffffff">Recuperación</str>
+			</text>
+			<lang>es</lang>
+		</liveitem>
+
+		<liveitem>
+			<target>psla:recovery</target>
+			<background valign="bottom" align="center">recovery.png</background>
+			<text origin="background" line-align="center" margin-top="-6">
+				<str size="20" bold="off" shadow="on" color="#ffffff">Wiederherstellung</str>
+			</text>
+			<lang>de</lang>
+		</liveitem>
+
+		<liveitem>
+			<target>psla:recovery</target>
+			<background valign="bottom" align="center">recovery.png</background>
+			<text origin="background" line-align="center" margin-top="-6">
+				<str size="20" bold="off" shadow="on" color="#ffffff">Ripristino</str>
+			</text>
+			<lang>it</lang>
+		</liveitem>
+
+		<liveitem>
+			<target>psla:recovery</target>
+			<background valign="bottom" align="center">recovery.png</background>
+			<text origin="background" line-align="center" margin-top="-6">
+				<str size="20" bold="off" shadow="on" color="#ffffff">Recuperação</str>
+			</text>
+			<lang>pt</lang>
+		</liveitem>
+
+		<liveitem>
+			<target>psla:recovery</target>
+			<background valign="bottom" align="center">recovery.png</background>
+			<text origin="background" line-align="center" margin-top="-6">
+				<str size="20" bold="off" shadow="on" color="#ffffff">Recuperação</str>
+			</text>
+			<lang>pt-br</lang>
+		</liveitem>
+
+		<liveitem>
+			<target>psla:recovery</target>
+			<background valign="bottom" align="center">recovery.png</background>
+			<text origin="background" line-align="center" margin-top="-6">
+				<str size="20" bold="off" shadow="on" color="#ffffff">Herstel</str>
+			</text>
+			<lang>nl</lang>
+		</liveitem>
+
+		<liveitem>
+			<target>psla:recovery</target>
+			<background valign="bottom" align="center">recovery.png</background>
+			<text origin="background" line-align="center" margin-top="-6">
+				<str size="20" bold="off" shadow="on" color="#ffffff">Gendannelse</str>
+			</text>
+			<lang>da</lang>
+		</liveitem>
+
+		<liveitem>
+			<target>psla:recovery</target>
+			<background valign="bottom" align="center">recovery.png</background>
+			<text origin="background" line-align="center" margin-top="-6">
+				<str size="20" bold="off" shadow="on" color="#ffffff">Palautus</str>
+			</text>
+			<lang>fi</lang>
+		</liveitem>
+
+		<liveitem>
+			<target>psla:recovery</target>
+			<background valign="bottom" align="center">recovery.png</background>
+			<text origin="background" line-align="center" margin-top="-6">
+				<str size="20" bold="off" shadow="on" color="#ffffff">Gjenoppretting</str>
+			</text>
+			<lang>no</lang>
+		</liveitem>
+
+		<liveitem>
+			<target>psla:recovery</target>
+			<background valign="bottom" align="center">recovery.png</background>
+			<text origin="background" line-align="center" margin-top="-6">
+				<str size="20" bold="off" shadow="on" color="#ffffff">Återställning</str>
+			</text>
+			<lang>sv</lang>
+		</liveitem>
+
+		<liveitem>
+			<target>psla:recovery</target>
+			<background valign="bottom" align="center">recovery.png</background>
+			<text origin="background" line-align="center" margin-top="-6">
+				<str size="20" bold="off" shadow="on" color="#ffffff">Восстановление</str>
+			</text>
+			<lang>ru</lang>
+		</liveitem>
+
+		<liveitem>
+			<target>psla:recovery</target>
+			<background valign="bottom" align="center">recovery.png</background>
+			<text origin="background" line-align="center" margin-top="-6">
+				<str size="20" bold="off" shadow="on" color="#ffffff">Odzyskiwanie</str>
+			</text>
+			<lang>pl</lang>
+		</liveitem>
+
+		<liveitem>
+			<target>psla:recovery</target>
+			<background valign="bottom" align="center">recovery.png</background>
+			<text origin="background" line-align="center" margin-top="-6">
+				<str size="20" bold="off" shadow="on" color="#ffffff">복구</str>
+			</text>
+			<lang>ko</lang>
+		</liveitem>
+
+		<liveitem>
+			<target>psla:recovery</target>
+			<background valign="bottom" align="center">recovery.png</background>
+			<text origin="background" line-align="center" margin-top="-6">
+				<str size="20" bold="off" shadow="on" color="#ffffff">恢復</str>
+			</text>
+			<lang>ch</lang>
+		</liveitem>
+
+		<liveitem>
+			<target>psla:recovery</target>
+			<background valign="bottom" align="center">recovery.png</background>
+			<text origin="background" line-align="center" margin-top="-6">
+				<str size="20" bold="off" shadow="on" color="#ffffff">恢复</str>
+			</text>
+			<lang>zh</lang>
+		</liveitem>
+
+		<liveitem>
+			<target>psla:recovery</target>
+			<background valign="bottom" align="center">recovery.png</background>
+			<text origin="background" line-align="center" margin-top="-6">
+				<str size="20" bold="off" shadow="on" color="#ffffff">Recovery tools</str>
+			</text>
+			<exclude-lang>ja</exclude-lang>
+			<exclude-lang>en</exclude-lang>
+			<exclude-lang>en-gb</exclude-lang>
+			<exclude-lang>fr</exclude-lang>
+			<exclude-lang>es</exclude-lang>
+			<exclude-lang>de</exclude-lang>
+			<exclude-lang>it</exclude-lang>
+			<exclude-lang>nl</exclude-lang>
+			<exclude-lang>pt</exclude-lang>
+			<exclude-lang>pt-br</exclude-lang>
+			<exclude-lang>ru</exclude-lang>
+			<exclude-lang>ko</exclude-lang>
+			<exclude-lang>ch</exclude-lang>
+			<exclude-lang>zh</exclude-lang>
+			<exclude-lang>fi</exclude-lang>
+			<exclude-lang>sv</exclude-lang>
+			<exclude-lang>da</exclude-lang>
+			<exclude-lang>no</exclude-lang>
+			<exclude-lang>pl</exclude-lang>
+		</liveitem>
+
+	</frame>
+</livearea>
