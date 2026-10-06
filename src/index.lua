@@ -3402,7 +3402,6 @@ if System.doesFileExist(cur_dir .. "/config.dat") then
 
     local getReflections = settingValue[1]; if getReflections ~= nil then setReflections = getReflections end
     local getSounds = settingValue[2]; if getSounds ~= nil then setSounds = getSounds end
-    local getthemeColor = settingValue[3]; if getthemeColor ~= nil then themeColor = getthemeColor end
     local getBackground = settingValue[4]; if getBackground ~= nil then setBackground = getBackground end
     local getLanguage = settingValue[5]; if getLanguage ~= nil then setLanguage = getLanguage end
     local getView = settingValue[6]; if getView ~= nil then showView = getView end
@@ -19098,39 +19097,34 @@ while true do
         cyberMenuUI.begin(lang_lines.Theme)
 
 
-        menuItems = 6
+        menuItems = 5
 
         -- MENU 4 / #0 Back
         Font.print(fnt22, setting_x, setting_y0, lang_lines.Back_Chevron, white)--Back
 
-        -- MENU 4 / #1 Theme Color
-        Font.print(fnt22, setting_x, setting_y1,  lang_lines.Theme_Color_colon, white)
-        local themeColorNames = { [0] = lang_lines.Blue, lang_lines.Red, lang_lines.Yellow, lang_lines.Green, lang_lines.Dark_Grey, lang_lines.Black, lang_lines.Purple, lang_lines.Dark_Purple, lang_lines.Orange, lang_lines.Grey }
-        settingsWheelUI.slider(setting_x_offset, setting_y1 - 2, themeColorNames[themeColor] or lang_lines.Blue)
+        -- MENU 4 / #1 Reflections
+        Font.print(fnt22, setting_x, setting_y1, lang_lines.Reflection_Effect_colon, white) -- REFLECTION
+        settingsWheelUI.toggle(setting_x_offset, setting_y1 - 2, setReflections)
 
-        -- MENU 4 / #2 Reflections
-        Font.print(fnt22, setting_x, setting_y2, lang_lines.Reflection_Effect_colon, white) -- REFLECTION
-        settingsWheelUI.toggle(setting_x_offset, setting_y2 - 2, setReflections)
-
-        -- MENU 4 / #3 Custom Background
-        Font.print(fnt22, setting_x, setting_y3,  lang_lines.Custom_Background_colon, white)
+        -- MENU 4 / #2 Custom Background
+        Font.print(fnt22, setting_x, setting_y2,  lang_lines.Custom_Background_colon, white)
         if setBackground == 0 then
-            settingsWheelUI.slider(setting_x_offset, setting_y3 - 2, lang_lines.Off)
+            settingsWheelUI.slider(setting_x_offset, setting_y2 - 2, lang_lines.Off)
         else
-            settingsWheelUI.slider(setting_x_offset, setting_y3 - 2, tostring(wallpaper_table_settings[setBackground].wallpaper_string))
+            settingsWheelUI.slider(setting_x_offset, setting_y2 - 2, tostring(wallpaper_table_settings[setBackground].wallpaper_string))
         end
 
-        -- MENU 4 / #4 Smooth scrolling
-        Font.print(fnt22, setting_x, setting_y4, lang_lines.Smooth_Scrolling_colon, white) -- Smooth scrolling
-        settingsWheelUI.toggle(setting_x_offset, setting_y4 - 2, smoothScrolling)
+        -- MENU 4 / #3 Smooth scrolling
+        Font.print(fnt22, setting_x, setting_y3, lang_lines.Smooth_Scrolling_colon, white) -- Smooth scrolling
+        settingsWheelUI.toggle(setting_x_offset, setting_y3 - 2, smoothScrolling)
 
-        -- MENU 4 / #5 2D Views
-        Font.print(fnt22, setting_x, setting_y5, lang_lines.Views_2D_colon, white) -- 2D Views:
-        settingsWheelUI.toggle(setting_x_offset, setting_y5 - 2, set2DViews)
+        -- MENU 4 / #4 2D Views
+        Font.print(fnt22, setting_x, setting_y4, lang_lines.Views_2D_colon, white) -- 2D Views:
+        settingsWheelUI.toggle(setting_x_offset, setting_y4 - 2, set2DViews)
 
-        -- MENU 4 / #6 Change views
-        Font.print(fnt22, setting_x, setting_y6, lang_lines.Change_Views_colon, white) -- Change Views:
-        settingsWheelUI.toggle(setting_x_offset, setting_y6 - 2, setChangeViews)
+        -- MENU 4 / #5 Change views
+        Font.print(fnt22, setting_x, setting_y5, lang_lines.Change_Views_colon, white) -- Change Views:
+        settingsWheelUI.toggle(setting_x_offset, setting_y5 - 2, setChangeViews)
 
 
         cyberMenuUI.restore()
@@ -19139,24 +19133,17 @@ while true do
         status = System.getMessageState()
         if status ~= RUNNING then
     
-            if (Controls.check(pad, SCE_CTRL_CROSS_MAP) and not Controls.check(oldpad, SCE_CTRL_CROSS_MAP)) or cyberMenuUI.sidePress({ [1] = "right", [2] = (setReflections == 1), [3] = "any", [4] = (smoothScrolling == 1), [5] = (set2DViews == 1), [6] = (setChangeViews == 1) }) then
+            if (Controls.check(pad, SCE_CTRL_CROSS_MAP) and not Controls.check(oldpad, SCE_CTRL_CROSS_MAP)) or cyberMenuUI.sidePress({ [1] = (setReflections == 1), [2] = "any", [3] = (smoothScrolling == 1), [4] = (set2DViews == 1), [5] = (setChangeViews == 1) }) then
                 if menuY == 0 then -- #0 Back
                     showMenu = 2
                     menuY = 2 -- Theme
-                elseif menuY == 1 then -- #1 Theme Color
-                    if themeColor < 9 then
-                        themeColor = themeColor + 1
-                    else
-                        themeColor = 0
-                    end
-                    SetThemeColor()
-                elseif menuY == 2 then -- #2 Reflections
+                elseif menuY == 1 then -- #1 Reflections
                     if setReflections == 1 then
                         setReflections = 0
                     else
                         setReflections = 1
                     end
-                elseif menuY == 3 then -- #3 Custom Background
+                elseif menuY == 2 then -- #2 Custom Background
                     bgtotal = #wallpaper_table_settings
                     if setBackground < bgtotal then
                         setBackground = setBackground + 1
@@ -19175,13 +19162,13 @@ while true do
                         -- Graphics.loadImage(wallpaper_table_settings[setBackground].wallpaper_path)
                         Render.useTexture(modBackground, imgCustomBack)
                     end
-                elseif menuY == 4 then -- #4 Smooth scrolling
+                elseif menuY == 3 then -- #3 Smooth scrolling
                     if smoothScrolling == 1 then
                         smoothScrolling = 0
                     else
                         smoothScrolling = 1
                     end
-                elseif menuY == 5 then -- #5 2D Views
+                elseif menuY == 4 then -- #4 2D Views
                     if set2DViews == 1 then
                         set2DViews = 0
 
@@ -19201,7 +19188,7 @@ while true do
                     else
                         set2DViews = 1
                     end
-                elseif menuY == 6 then -- #6 Change views
+                elseif menuY == 5 then -- #5 Change views
                     if setChangeViews == 1 then
                         setChangeViews = 0
                     else
@@ -19223,16 +19210,6 @@ while true do
                     menuY = menuY + 1
                     else
                     menuY=0
-                end
-            elseif (Controls.check(pad, SCE_CTRL_LEFT)) and not (Controls.check(oldpad, SCE_CTRL_LEFT)) then
-                if menuY == 1 then
-                    if themeColor > 0 then
-                        themeColor = themeColor - 1
-                    else
-                        themeColor = 9
-                    end
-                    SetThemeColor()
-                    SaveSettings()
                 end
             end
             
